@@ -2,6 +2,7 @@ import Simulator as S
 import numpy as np
 import pymap3d as map
 import Types as T
+import Propagator as P
 import math
 import importlib
 import matplotlib
@@ -11,6 +12,7 @@ import matplotlib.pyplot as plt
 importlib.reload(plt)
 importlib.reload(T)
 importlib.reload(S)
+importlib.reload(P)
 import pyvista as pv
 import vtk
 from PIL import Image
