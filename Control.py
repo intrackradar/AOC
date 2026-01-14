@@ -1,0 +1,409 @@
+import Simulator as S
+import numpy as np
+import pymap3d as map
+import Types as T
+import math
+import importlib
+import matplotlib
+import pandas as pd
+matplotlib.use('QtAgg')
+import matplotlib.pyplot as plt
+importlib.reload(plt)
+importlib.reload(T)
+importlib.reload(S)
+import pyvista as pv
+import vtk
+from PIL import Image
+import datetime
+
+# ConvertRestToVecs is a helper function that converts the simulation results for an object into individual traces for plotting
+def ConvertResToVecs(res):
+    x = []
+    y = []
+    z = []
+    vx = []
+    vy = []
+    vz = []
+    t = []
+    rcs = []
+    az = []
+    el = []
+
+    for r in res:
+        x.append(r[0])
+        y.append(r[1])
+        z.append(r[2])
+        vx.append(r[3])
+        vy.append(r[4])
+        vz.append(r[5])
+        t.append(r[6])
+        rcs.append(r[7][0])
+        az.append(r[7][1])
+        el.append(r[7][2])
+
+    return np.array(x), np.array(y), np.array(z), np.array(vx), np.array(vy), np.array(vz), np.array(t), np.array(rcs), np.array(az), np.array(el)
+
+
+
+# Define initial simulation start time
+startTime = datetime.datetime(2025,1,1,1,1,1,1)
+
+# This is the observer site location
+# TODO: Add support to the simulation engine for multiple observer site locations.
+#  -> I.E. Convert the S.ObserverLocation into an array
+#  -> Add support for each observer to have sensor specific information (such as scan pattern, etc) and record measurements as part of any fence scans for later plotting
+
+obsLLH = [39,-121,100]
+ObsLoc = map.geodetic2ecef(obsLLH[0],obsLLH[1],obsLLH[2])
+S.ObserverLocation = T.Vec(ObsLoc[0], ObsLoc[1], ObsLoc[2],0)
+
+# Define the object launch location
+# TODO: Set this as configurable for each object
+#  -> Include information about x-patch file, aerodynamics, rocket information, headings, launch location, launch time
+#  -> setup to use json format
+lat = 35
+lon = 100
+ObjectPos =  map.geodetic2ecef(lat,lon,0)
+
+## Construct the various objects
+# TODO: Move all of this to the object configuration files
+data = []
+S.Objects = [] # This is the simulation data object that holds the objects
+data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_pencil_almond_half_deg.xlsx", sheet_name="almond"))
+data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_pencil_almond_half_deg.xlsx", sheet_name="pencil"))
+data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_tcone (1).xlsx", sheet_name="tcone"))
+data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_tcone (1).xlsx", sheet_name="30_8_80"))
+data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_x29.xlsx", sheet_name="x29"))
+
+names = ["almond","pencil","tcone","tcone2","X29"]
+# names = ["almond"]
+
+# Construct each object
+# TODO: Move this as part of the object construction from file load
+for jj in range(len(data)):
+    rmap = {}
+    for ii in range(data[jj].shape[0]):
+
+
+        vals = data[jj].loc[ii]
+        try:
+            e = vals[1]
+            a = vals[2]
+            r1 = vals[3]
+
+            if math.isnan(e):
+                continue
+
+            if a in rmap:
+                rmap[a][e] = r1
+            else:
+                rmap[a] = {}
+                rmap[a][e] = r1
+        except:
+            continue
+    precision = np.round(np.mean(np.diff(np.array(list(rmap.keys()))) % 360),1)
+    rcsMap1 = T.RCSMapAzEl(rmap, precision, 180)
+    ObjectPos1 = T.Vec(ObjectPos[0], ObjectPos[1], ObjectPos[2], 0)
+    ObjectVel1 = T.Vec(ObjectVel[0], ObjectVel[1], ObjectVel[2], 0)
+    RE = T.RocketEngine([T.stage(30000,790e3,300),T.stage(5000,267e3,300),T.stage(3000,150e3,300)])
+    az = 22
+    el = 12
+    baseLoc = np.array(map.geodetic2eci(lat, lon, 0.0, startTime))
+    launchForward = np.array(map.aer2eci(az, el, 1.0, lat, lon, 0.0, startTime)) - baseLoc
+    launchStart = np.array(map.aer2eci(0, 90.0, 1.0, lat, lon, 0.0, startTime)) - baseLoc
+
+    Head = T.Headings([T.Heading([startTime+datetime.timedelta(seconds=0),startTime+datetime.timedelta(seconds=30)], launchStart),
+                       T.Heading([startTime+datetime.timedelta(seconds=30),startTime+datetime.timedelta(seconds=400)],launchForward)])
+
+    S.Objects.append(T.Obj(rcsMap1,T.RK4Propagator([lat,lon,0.0],startTime,0.25,RE,0.044,2.2,Head,2000)))
+
+
+# Set the simulation start time and stop times
+# TODO: Have this be part of the simulation config file
+S.StartTime = startTime
+S.StopTime = S.StartTime+datetime.timedelta(seconds=2189)
+
+
+# Run the simulation
+res = S.Simulate()
+
+# Separate the output for each object from the simulation results object
+output = []
+for o in res:
+    output.append(res[o])
+
+# The rest of these are graphs
+# TODO: Add graphs filtered based on each site's visibility
+#  Clean up graphs to handle multiple sites.
+
+#
+# globe plot trajectory
+texture = pv.read_texture("C:\\Users\\Jerem\\Downloads\\world.topo.bathy.200412.3x21600x10800.jpg")
+radius = 6371000.0  # km (any scale works)
+
+sphere = pv.Sphere(radius=radius, theta_resolution=360, phi_resolution=180)
+
+pts = sphere.points
+x1, y1, z1 = pts[:, 0], pts[:, 1], pts[:, 2]
+
+# Convert XYZ to spherical angles
+theta = np.arctan2(y1, x1)        # longitude angle
+phi = np.arcsin(z1 / radius)     # latitude angle
+
+# Normalize to [0, 1] for UV texture
+u = (theta + np.pi) / (2 * np.pi)       # 0 → 1
+v = (phi + np.pi/2) / np.pi             # 0 → 1
+
+uv = np.column_stack([u, v])
+
+# Attach UV coords to the mesh
+uv_vtk = vtk.vtkFloatArray()
+uv_vtk.SetNumberOfComponents(2)
+uv_vtk.SetNumberOfTuples(len(uv))
+uv_vtk.SetName("TextureCoordinates")
+for i in range(len(uv)):
+    uv_vtk.SetTuple(i, uv[i])
+
+sphere.GetPointData().SetTCoords(uv_vtk)
+
+plotter = pv.Plotter()
+plotter.add_mesh(sphere, texture=texture)
+
+# Add the LLH points
+x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[0])
+
+points = np.column_stack((x,y,z))
+plotter.add_points(points, color="red", point_size=10)
+
+points = np.column_stack((ObsLoc[0],ObsLoc[1],ObsLoc[2]))
+plotter.add_points(points, color="Orange", point_size=10)
+#
+# x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[1])
+#
+# points = np.column_stack((x,y,z))
+# plotter.add_points(points, color="black", point_size=10)
+
+plotter.add_axes()
+plotter.show()
+
+## Range versus RCS
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ps = []
+for ii in range(len(data)):
+    x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[ii])
+
+    rng = []
+    for ii in range(len(x)):
+        rng.append(np.linalg.norm([x[ii]-ObsLoc[0],y[ii]-ObsLoc[1],z[ii]-ObsLoc[2]]))
+
+    p,=ax.plot(np.array(rng)/1000,r)
+    ps.append(p)
+
+ax.legend(ps,names)
+
+ax.set_xlabel("Range (km)")
+ax.set_ylabel("RCS")
+ax.grid()
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+ps = []
+for ii in range(len(data)):
+    x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[ii])
+
+    rng = []
+    for ii in range(len(x)):
+        rng.append(np.linalg.norm([x[ii]-ObsLoc[0],y[ii]-ObsLoc[1],z[ii]-ObsLoc[2]]))
+
+    p,=ax.plot(az,r)
+    ps.append(p)
+
+ax.legend(ps,names)
+
+ax.set_xlabel("Incident Az (Deg)")
+ax.set_ylabel("RCS")
+ax.grid()
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+ps = []
+for ii in range(len(data)):
+    x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[ii])
+
+    rng = []
+    for ii in range(len(x)):
+        rng.append(np.linalg.norm([x[ii]-ObsLoc[0],y[ii]-ObsLoc[1],z[ii]-ObsLoc[2]]))
+
+    p,=ax.plot(el,r)
+    ps.append(p)
+
+ax.legend(ps,names)
+ax.set_xlabel("Incident El (Deg)")
+ax.set_ylabel("RCS")
+ax.grid()
+
+## Az-El-RCS graph
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+
+ps = []
+for ii in range(len(data)):
+    x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[ii])
+
+    p,=ax.plot(az,el,r)
+    ps.append(p)
+
+ax.legend(ps,names)
+
+ax.set_zlabel("RCS (dBsm)")
+ax.set_xlabel("Az (deg)")
+ax.set_ylabel("El (deg)")
+
+## Time-Distance-RCS graph
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+
+ps = []
+for ii in range(len(data)):
+    x,y,z,vx,vy,vz,t,rcs, az, el = ConvertResToVecs(output[ii])
+
+    rng = []
+    for ii in range(len(x)):
+        rng.append(np.linalg.norm([x[ii]-ObsLoc[0],y[ii]-ObsLoc[1],z[ii]-ObsLoc[2]]))
+
+    p,=ax.plot([tm.seconds for tm in (t-startTime)],np.array(rng)/1000,rcs)
+    ps.append(p)
+
+ax.legend(ps,names)
+
+ax.set_zlabel("RCS (dBsm)")
+ax.set_xlabel("Time (Sec)")
+ax.set_ylabel("Range (km)")
+
+## Time-Altitude-RCS graph
+fig = plt.figure()
+ax = fig.add_subplot(111,projection='3d')
+
+ps = []
+for ii in range(len(data)):
+    x,y,z,vx,vy,vz,t,rcs, az, el = ConvertResToVecs(output[ii])
+
+    rng = []
+    for ii in range(len(x)):
+        rng.append(np.linalg.norm([x[ii]-ObsLoc[0],y[ii]-ObsLoc[1],z[ii]-ObsLoc[2]]))
+    llh = map.ecef2geodetic(x,y,z)
+    p,=ax.plot([tm.seconds for tm in (t-startTime)],llh[2]/1000,rcs)
+    ps.append(p)
+
+ax.legend(ps,names)
+
+ax.set_zlabel("RCS (dBsm)")
+ax.set_xlabel("Time (Sec)")
+ax.set_ylabel("Altitude (km)")
+plt.show()
+
+## Time versus RCS
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+ps = []
+for ii in range(len(data)):
+    x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[ii])
+
+    rng = []
+    for ii in range(len(x)):
+        rng.append(np.linalg.norm([x[ii]-ObsLoc[0],y[ii]-ObsLoc[1],z[ii]-ObsLoc[2]]))
+
+    p,=ax.plot([tm.seconds for tm in (t-startTime)],r)
+    ps.append(p)
+
+ax.legend(ps,names)
+
+ax.set_xlabel("Time (s)")
+ax.set_ylabel("RCS (dBsm)")
+ax.grid()
+
+## 3d matplot lib plot of trajectory colored by RCS
+fig = plt.figure(figsize=(18, 6))
+ax1 = fig.add_subplot(131,projection='3d')
+ax2 = fig.add_subplot(132, projection='3d')
+ax3 = fig.add_subplot(133, projection='3d')
+
+
+x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[0])
+
+p1=ax1.scatter(x/1000,y/1000,z/1000, c = r, cmap = "jet")
+
+x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[1])
+
+p2=ax2.scatter(x/1000,y/1000,z/1000, c = r, cmap = "jet")
+
+x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[2])
+
+p3=ax3.scatter(x/1000,y/1000,z/1000, c = r, cmap = "jet")
+
+
+ax1.set_zlabel("Z")
+ax1.set_xlabel("X")
+ax1.set_ylabel("Y")
+ax1.set_title("Almond 40")
+ax2.set_zlabel("Z")
+ax2.set_xlabel("X")
+ax2.set_ylabel("Y")
+ax2.set_title("Pencil 100")
+ax3.set_zlabel("Z")
+ax3.set_xlabel("X")
+ax3.set_ylabel("Y")
+ax3.set_title("Cone")
+cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+cbar1.set_label("RCS (dBsm)")
+cbar2 = fig.colorbar(p2, ax=ax2, shrink=0.7)
+cbar2.set_label("RCS (dBsm)")
+cbar3 = fig.colorbar(p3, ax=ax3, shrink=0.7)
+cbar3.set_label("RCS (dBsm)")
+# plt.show()
+
+## 3d matplot lib plot of trajectory colored by RCS
+fig = plt.figure(figsize=(18, 6))
+ax1 = fig.add_subplot(131,projection='3d')
+ax2 = fig.add_subplot(132, projection='3d')
+ax3 = fig.add_subplot(133, projection='3d')
+
+
+x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[0])
+llh = map.ecef2geodetic(x,y,z)
+p1=ax1.scatter(llh[1] % 360, llh[0],llh[2]/1000, c = r, cmap = "jet")
+
+x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[1])
+llh = map.ecef2geodetic(x,y,z)
+p2=ax2.scatter(llh[1] % 360, llh[0],llh[2]/1000, c = r, cmap = "jet")
+
+x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[2])
+llh = map.ecef2geodetic(x,y,z)
+p3=ax3.scatter(llh[1] % 360, llh[0],llh[2]/1000, c = r, cmap = "jet")
+
+
+ax1.set_zlabel("Alt (km)")
+ax1.set_xlabel("Lon (deg)")
+ax1.set_ylabel("Lat (deg)")
+ax1.set_title("Almond 40")
+ax2.set_zlabel("Alt (km)")
+ax2.set_xlabel("Lon (deg)")
+ax2.set_ylabel("Lat (deg)")
+ax2.set_title("Pencil 100")
+ax3.set_zlabel("Alt (km)")
+ax3.set_xlabel("Lon (deg)")
+ax3.set_ylabel("Lat (deg)")
+ax3.set_title("Cone")
+cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+cbar1.set_label("RCS (dBsm)")
+cbar2 = fig.colorbar(p2, ax=ax2, shrink=0.7)
+cbar2.set_label("RCS (dBsm)")
+cbar3 = fig.colorbar(p3, ax=ax3, shrink=0.7)
+cbar3.set_label("RCS (dBsm)")
+
+plt.show()
