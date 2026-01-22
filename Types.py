@@ -142,13 +142,19 @@ class StateVector:
 
 
 class Obj:
-    def __init__(self, rcsInfo, propagator):
+    def __init__(self, name, rcsInfo, propagator):
         self.rcs = rcsInfo
         self.Propagator = propagator
+        self.Name = name
 
-    def Record(self, observerState):
+    def Record(self):
         State = self.Propagator.StateInfo()
-        return [State.Pos.x,State.Pos.y,State.Pos.z, State.Vel.x,State.Vel.y,State.Vel.z,State.Pos.t, self.rcs.Value(State, observerState)]
+        return [State.Pos.x,State.Pos.y,State.Pos.z, State.Vel.x,State.Vel.y,State.Vel.z,State.Pos.t]
+
+    def RecordFromObserver(self, observerState):
+        State = self.Propagator.StateInfo()
+        return [State.Pos.x, State.Pos.y, State.Pos.z, State.Vel.x, State.Vel.y, State.Vel.z, State.Pos.t,
+                self.rcs.Value(State, observerState)]
 
     def StateInfo(self):
         return self.Propagator.StateInfo()

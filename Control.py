@@ -9,6 +9,12 @@ import matplotlib
 import pandas as pd
 matplotlib.use('QtAgg')
 import matplotlib.pyplot as plt
+import Objects as O
+import ObjectData as OD
+import Helper as H
+importlib.reload(H)
+importlib.reload(O)
+importlib.reload(OD)
 importlib.reload(plt)
 importlib.reload(T)
 importlib.reload(S)
@@ -18,113 +24,27 @@ import vtk
 from PIL import Image
 import datetime
 
-# ConvertRestToVecs is a helper function that converts the simulation results for an object into individual traces for plotting
-def ConvertResToVecs(res):
-    x = []
-    y = []
-    z = []
-    vx = []
-    vy = []
-    vz = []
-    t = []
-    rcs = []
-    az = []
-    el = []
 
-    for r in res:
-        x.append(r[0])
-        y.append(r[1])
-        z.append(r[2])
-        vx.append(r[3])
-        vy.append(r[4])
-        vz.append(r[5])
-        t.append(r[6])
-        rcs.append(r[7][0])
-        az.append(r[7][1])
-        el.append(r[7][2])
-
-    return np.array(x), np.array(y), np.array(z), np.array(vx), np.array(vy), np.array(vz), np.array(t), np.array(rcs), np.array(az), np.array(el)
 
 
 
 # Define initial simulation start time
 startTime = datetime.datetime(2025,1,1,1,1,1,1)
 
-# This is the observer site location
-# TODO: Add support to the simulation engine for multiple observer site locations.
-#  -> I.E. Convert the S.ObserverLocation into an array
-#  -> Add support for each observer to have sensor specific information (such as scan pattern, etc) and record measurements as part of any fence scans for later plotting
+# load in all the objects
+for o in OD.objects:
+    S.Objects[o] = O.LoadObject(OD.objects[o])
+    break
 
-obsLLH = [39,-121,100]
-ObsLoc = map.geodetic2ecef(obsLLH[0],obsLLH[1],obsLLH[2])
-S.ObserverLocation = T.Vec(ObsLoc[0], ObsLoc[1], ObsLoc[2],0)
-
-# Define the object launch location
-# TODO: Set this as configurable for each object
-#  -> Include information about x-patch file, aerodynamics, rocket information, headings, launch location, launch time
-#  -> setup to use json format
-lat = 35
-lon = 100
-ObjectPos =  map.geodetic2ecef(lat,lon,0)
-
-## Construct the various objects
-# TODO: Move all of this to the object configuration files
-data = []
-S.Objects = [] # This is the simulation data object that holds the objects
-data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_pencil_almond_half_deg.xlsx", sheet_name="almond"))
-data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_pencil_almond_half_deg.xlsx", sheet_name="pencil"))
-data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_tcone (1).xlsx", sheet_name="tcone"))
-data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_tcone (1).xlsx", sheet_name="30_8_80"))
-data.append(pd.read_excel("C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_x29.xlsx", sheet_name="x29"))
-
-names = ["almond","pencil","tcone","tcone2","X29"]
-# names = ["almond"]
-
-# Construct each object
-# TODO: Move this as part of the object construction from file load
-for jj in range(len(data)):
-    rmap = {}
-    for ii in range(data[jj].shape[0]):
-
-
-        vals = data[jj].loc[ii]
-        try:
-            e = vals[1]
-            a = vals[2]
-            r1 = vals[3]
-
-            if math.isnan(e):
-                continue
-
-            if a in rmap:
-                rmap[a][e] = r1
-            else:
-                rmap[a] = {}
-                rmap[a][e] = r1
-        except:
-            continue
-    precision = np.round(np.mean(np.diff(np.array(list(rmap.keys()))) % 360),1)
-    rcsMap1 = T.RCSMapAzEl(rmap, precision, 180)
-    ObjectPos1 = T.Vec(ObjectPos[0], ObjectPos[1], ObjectPos[2], 0)
-    ObjectVel1 = T.Vec(ObjectVel[0], ObjectVel[1], ObjectVel[2], 0)
-    RE = T.RocketEngine([T.stage(30000,790e3,300),T.stage(5000,267e3,300),T.stage(3000,150e3,300)])
-    az = 22
-    el = 12
-    baseLoc = np.array(map.geodetic2eci(lat, lon, 0.0, startTime))
-    launchForward = np.array(map.aer2eci(az, el, 1.0, lat, lon, 0.0, startTime)) - baseLoc
-    launchStart = np.array(map.aer2eci(0, 90.0, 1.0, lat, lon, 0.0, startTime)) - baseLoc
-
-    Head = T.Headings([T.Heading([startTime+datetime.timedelta(seconds=0),startTime+datetime.timedelta(seconds=30)], launchStart),
-                       T.Heading([startTime+datetime.timedelta(seconds=30),startTime+datetime.timedelta(seconds=400)],launchForward)])
-
-    S.Objects.append(T.Obj(rcsMap1,T.RK4Propagator([lat,lon,0.0],startTime,0.25,RE,0.044,2.2,Head,2000)))
-
+# load in all the sensors / observers
+for s in OD.sensors:
+    S.Observers[s] = O.LoadObserver(OD.sensors[s])
 
 # Set the simulation start time and stop times
-# TODO: Have this be part of the simulation config file
-S.StartTime = startTime
-S.StopTime = S.StartTime+datetime.timedelta(seconds=2189)
-
+datetime.datetime.fromisoformat(OD.simulation["start time"])
+S.StartTime = datetime.datetime.fromisoformat(OD.simulation["start time"])
+S.StopTime = datetime.datetime.fromisoformat(OD.simulation["stop time"])
+S.dt = OD.simulation["time step"]
 
 # Run the simulation
 res = S.Simulate()
@@ -170,15 +90,28 @@ sphere.GetPointData().SetTCoords(uv_vtk)
 
 plotter = pv.Plotter()
 plotter.add_mesh(sphere, texture=texture)
+# Add the LLH points
+counter = 0
+colors = ["black","orange","grey"]
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t = H.ConvertResToVecs(S.Observers[s].Results["x29"])
+    if len(x) == 0:
+        continue
+    points = np.column_stack((x,y,z))
+    plotter.add_points(points, color=colors[counter], point_size=25,label=s)
+    counter+=1
 
 # Add the LLH points
-x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[0])
+x,y,z,vx,vy,vz,t = H.ConvertResToVecs(output[0])
 
 points = np.column_stack((x,y,z))
 plotter.add_points(points, color="red", point_size=10)
+plotter.add_legend()
 
-points = np.column_stack((ObsLoc[0],ObsLoc[1],ObsLoc[2]))
-plotter.add_points(points, color="Orange", point_size=10)
+
+
+# points = np.column_stack((ObsLoc[0],ObsLoc[1],ObsLoc[2]))
+# plotter.add_points(points, color="Orange", point_size=10)
 #
 # x,y,z,vx,vy,vz,t,r, az, el = ConvertResToVecs(output[1])
 #
@@ -187,6 +120,11 @@ plotter.add_points(points, color="Orange", point_size=10)
 
 plotter.add_axes()
 plotter.show()
+
+
+
+
+
 
 ## Range versus RCS
 
@@ -409,3 +347,11 @@ cbar3 = fig.colorbar(p3, ax=ax3, shrink=0.7)
 cbar3.set_label("RCS (dBsm)")
 
 plt.show()
+
+az = 320
+el = 14
+lat = 35
+lon = 51
+baseLoc = np.array(map.geodetic2eci(lat, lon, 0.0, startTime))
+launchForward = np.array(map.aer2eci(az, el, 1.0, lat, lon, 0.0, startTime)) - baseLoc
+launchStart = np.array(map.aer2eci(0, 90.0, 1.0, lat, lon, 0.0, startTime)) - baseLoc

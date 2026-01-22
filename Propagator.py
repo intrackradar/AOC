@@ -2,9 +2,17 @@ import datetime
 
 import numpy as np
 import math
-
+import Types as T
 import pymap3d
 import pymap3d as map
+
+# =====================
+# Constants
+# =====================
+MU = 3.986004418e14          # Earth gravitational parameter [m^3/s^2]
+R_E = 6378137.0              # Earth radius [m]
+OMEGA_E = np.array([0.0, 0.0, 7.2921159e-5])  # Earth rotation [rad/s]
+G0 = 9.80665
 
 class BasicPropagator:
     def __init__(self, startState, dt, accelModel):
@@ -132,9 +140,12 @@ class RK4Propagator:
         p = pymap3d.geodetic2eci(llhPos[0], llhPos[1], llhPos[2], startTime)
         v = np.cross(OMEGA_E, p)
 
-        st = StateVector(Vec(p[0], p[1],p[2],startTime),Vec(v[0],v[1],v[2], startTime))
+        st = T.StateVector(T.Vec(p[0], p[1],p[2],startTime),T.Vec(v[0],v[1],v[2], startTime))
         self.InitTime = startTime
+
         self.State = st
+        self.InitAlt = math.sqrt(
+            self.State.Pos.x * self.State.Pos.x + self.State.Pos.y * self.State.Pos.y + self.State.Pos.z * self.State.Pos.z)
         self.dt = dt
         self.A = A
         self.Cd = cd
@@ -146,7 +157,7 @@ class RK4Propagator:
         tm = self.State.Pos.t
         deltaT = (tm - self.InitTime).seconds
         while tm < time:
-            alt = math.sqrt(self.State.Pos.x * self.State.Pos.x + self.State.Pos.y * self.State.Pos.y + self.State.Pos.z * self.State.Pos.z) - 6378000
+            alt = math.sqrt(self.State.Pos.x * self.State.Pos.x + self.State.Pos.y * self.State.Pos.y + self.State.Pos.z * self.State.Pos.z) - self.InitAlt
             if deltaT > 100:
                 if alt < 0:
                     break
@@ -176,11 +187,12 @@ class RK4Propagator:
 
         return self.StateInfo()
 
+    # StateInfo should always return ECEF coordinates. NOT ECI!!
     def StateInfo(self):
         stP = map.eci2ecef(self.State.Pos.x,self.State.Pos.y,self.State.Pos.z,self.State.Pos.t)
         stV1 = map.eci2ecef(self.State.Pos.x + self.State.Vel.x,self.State.Pos.y + self.State.Vel.y,self.State.Pos.z + self.State.Vel.z,self.State.Pos.t)
         stV = np.array(stV1)-np.array(stP)
-        return StateVector(Pos=Vec(stP[0], stP[1], stP[2], self.State.Pos.t), Vel=Vec(stV[0], stV[1], stV[2], self.State.Pos.t))
+        return T.StateVector(Pos=T.Vec(stP[0], stP[1], stP[2], self.State.Pos.t), Vel=T.Vec(stV[0], stV[1], stV[2], self.State.Pos.t))
     # =====================
     # Atmosphere (simple exponential)
     # =====================
