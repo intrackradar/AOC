@@ -36,7 +36,7 @@ def Simulate():
                                   Observers[s].Location[1],
                                   Observers[s].Location[2])
                 snr = rec[-1][0] - 40*math.log10(aer[2]) + Observers[s].LoopGain
-                if snr > Observers[s].SNRLimit and aer[1] > 0.5:
+                if snr > Observers[s].SNRLimit and aer[1] > 0.5 and aer[1] < 3.5:
                     Observers[s].Results[Objects[o].Name].append(rec)
                     Observers[s].Results[Objects[o].Name][-1].append(snr)
 
