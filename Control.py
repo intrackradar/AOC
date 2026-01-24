@@ -514,3 +514,18 @@ cbar3.set_label("RCS (dBsm)")
 
 plt.show()
 
+
+# xp = math.sin(190/57.295)
+# yp = math.cos(190/57.295)
+# xleft = math.sin(350/57.295)
+# yleft=math.cos(350/57.295)
+# xright = math.sin(345/57.295)
+# yright = math.cos(345/57.295)
+#
+# si = xright*yleft-yright*xleft
+# co = xright*xleft + yleft*yright
+#
+# si = xright*yleft-yright*xleft
+# co = xright*xleft + yleft*yright
+#
+# math.atan2(si,co)*57.295 % 360

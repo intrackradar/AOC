@@ -11,12 +11,24 @@ import pymap3d as mp
 Objects = {}
 ObjectJSON = OD.objects
 
+Deg2Rad = math.pi/180.0
+
 class ParsedJSONObserver:
     def __init__(self, jsonData):
         self.Name = jsonData["name"]
         self.Location = [jsonData["location"]["lat"], jsonData["location"]["lon"],
                                jsonData["location"]["heightM"]]
-        self.Scan = [jsonData["fence"]["az"],jsonData["fence"]["el"]]
+
+        xleft = math.sin(jsonData["fence"]["az"][0] * Deg2Rad)
+        yleft = math.cos(jsonData["fence"]["az"][0] * Deg2Rad)
+        xright = math.sin(jsonData["fence"]["az"][1] * Deg2Rad)
+        yright = math.cos(jsonData["fence"]["az"][1] * Deg2Rad)
+
+        si = xright * yleft - yright * xleft
+        co = xright * xleft + yleft * yright
+
+        self.AzFence = [[xleft, yleft],math.atan2(si,co) % (2*math.pi)]
+        self.Fence = [jsonData["fence"]["az"],jsonData["fence"]["el"]]
         self.Beamwidth = jsonData["beamwidth"]
         self.LoopGain = jsonData["loopgain"]
         self.Results = {}

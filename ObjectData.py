@@ -3,7 +3,7 @@ cali = {
     "name":"cali",
     "loopgain": 280,
     "location": {"lat":39, "lon":-121, "heightM":100},
-    "fence":{"az":[270, 90],"el":[3.0, 3.0]},
+    "fence":{"az":[270, 90],"el":[3.0]},
     "beamwidth":2.0,
     "snrlimit": 4.0
 }
@@ -21,7 +21,7 @@ cape_cod = {
     "name":"cape cod",
     "loopgain": 280,
     "location": {"lat":42, "lon":-70, "heightM":10},
-    "fence":{"az":[270, 90],"el":[3.0]},
+    "fence":{"az":[0, 360],"el":[3.0]},
     "beamwidth":2.0,
     "snrlimit": 4.0
 }
@@ -39,7 +39,7 @@ fylingdale = {
     "name":"fylingdale",
     "loopgain": 280,
     "location": {"lat":57.6, "lon":-4.5, "heightM":10},
-    "fence":{"az":[270, 90],"el":[3.0]},
+    "fence":{"az":[0, 360],"el":[3.0]},
     "beamwidth":2.0,
     "snrlimit": 4.0
 }

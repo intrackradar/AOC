@@ -10,6 +10,9 @@ StopTime = 0
 dt = 1
 tm = StartTime
 
+Deg2Rad = math.pi/180.0
+
+
 def Simulate(): 
     results = {}
     for o in Objects:
@@ -35,10 +38,26 @@ def Simulate():
                                   Observers[s].Location[0],
                                   Observers[s].Location[1],
                                   Observers[s].Location[2])
-                snr = rec[-1][0] - 40*math.log10(aer[2]) + Observers[s].LoopGain
-                if snr > Observers[s].SNRLimit and aer[1] > 0.5 and aer[1] < 3.5:
-                    Observers[s].Results[Objects[o].Name].append(rec)
-                    Observers[s].Results[Objects[o].Name][-1].append(snr)
+
+                yp = math.cos(aer[0] * Deg2Rad)
+                xp = math.sin(aer[0] * Deg2Rad)
+
+                xleft = Observers[s].AzFence[0][0]
+                yleft = Observers[s].AzFence[0][1]
+
+                si = xp * yleft - yp * xleft
+                co = xp * xleft + yleft * yp
+
+                ang = math.atan2(si,co) % (2*math.pi)
+                elEr = Observers[s].Fence[1] - aer[1]
+                beamloss = math.exp(-0.5 *1.3862943611198906 * elEr*elEr/(Observers[s].Beamwidth*Observers[s].Beamwidth))
+                if ang <= Observers[s].AzFence[1] and \
+                    (aer[1] >= Observers[s].Fence[1][0]) and beamloss > 0:
+
+                    snr = rec[-1][0] - 40*math.log10(aer[2]) + Observers[s].LoopGain + 10*math.log10(beamloss)
+                    if snr > Observers[s].SNRLimit:
+                        Observers[s].Results[Objects[o].Name].append(rec)
+                        Observers[s].Results[Objects[o].Name][-1].append(snr)
 
 
         tm = tm + datetime.timedelta(seconds=dt)
