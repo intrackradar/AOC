@@ -15,7 +15,39 @@ R_E = 6378137.0              # Earth radius [m]
 OMEGA_E = np.array([0.0, 0.0, 7.2921159e-5])  # Earth rotation [rad/s]
 G0 = 9.80665                 # Sea-level gravity [m/s^2]
 
+class RCSMap:
+    def __init__(self, rcsazelmaps, freqVals):
+        self.RCSAzElMaps = rcsazelmaps
+        self.FreqVals = freqVals
+        self.MaxF = np.max(freqVals)
+        self.MinF = np.min(freqVals)
 
+    def Value(self, targetState, observerState, Freq):
+        if Freq > self.MaxF*1.1:
+            print("higher than max: ",Freq, self.MaxF)
+            return [np.nan, 0, 0]
+        if Freq < self.MinF*0.9:
+            print("less than min: ", Freq, self.MinF)
+            return [np.nan, 0, 0]
+
+        ind = np.argmin(np.fabs(self.FreqVals - Freq))
+
+        if ind == len(self.FreqVals) - 1 and Freq >= self.FreqVals[-1]:
+            return self.RCSAzElMaps[-1].Value(targetState, observerState)
+        if ind == 0 and Freq <= self.FreqVals[0]:
+            return self.RCSAzElMaps[0].Value(targetState, observerState)
+
+        q1 = self.RCSAzElMaps[ind].Value(targetState, observerState)
+        q2 = 0
+        scale = 0
+        if Freq > self.FreqVals[ind]:
+            q2 = self.RCSAzElMaps[ind+1].Value(targetState, observerState)
+            scale = (Freq-self.FreqVals[ind])/(self.FreqVals[ind+1]-self.FreqVals[ind])
+        else:
+            q2 = self.RCSAzElMaps[ind - 1].Value(targetState, observerState)
+            scale = 1-(Freq - self.FreqVals[ind-1]) / (self.FreqVals[ind] - self.FreqVals[ind-1])
+
+        return q1[0]*(1-scale) + scale*q2[0], q1[1], q1[2]
 ## RCS map takes in a map of az and el values rcsData[az][el] at a step size
 class RCSMapAzEl:
     def __init__(self, mapOfValues, precision,azShift):
@@ -151,10 +183,10 @@ class Obj:
         State = self.Propagator.StateInfo()
         return [State.Pos.x,State.Pos.y,State.Pos.z, State.Vel.x,State.Vel.y,State.Vel.z,State.Pos.t]
 
-    def RecordFromObserver(self, observerState):
+    def RecordFromObserver(self, observerState, freq):
         State = self.Propagator.StateInfo()
         return [State.Pos.x, State.Pos.y, State.Pos.z, State.Vel.x, State.Vel.y, State.Vel.z, State.Pos.t,
-                self.rcs.Value(State, observerState)]
+                self.rcs.Value(State, observerState, freq)]
 
     def StateInfo(self):
         return self.Propagator.StateInfo()

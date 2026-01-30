@@ -35,9 +35,9 @@ startTime = datetime.datetime(2025,1,1,1,1,1,1)
 # for o in OD.objects:
 #     S.Objects[o] = O.LoadObject(OD.objects[o])
 #     break
-S.Objects["pencil"] = O.LoadObject(OD.objects["pencil"])
+# S.Objects["pencil"] = O.LoadObject(OD.objects["pencil"])
 S.Objects["almond"] = O.LoadObject(OD.objects["almond"])
-S.Objects["tcone"] = O.LoadObject(OD.objects["tcone"])
+# S.Objects["tcone"] = O.LoadObject(OD.objects["tcone"])
 
 # S.Objects["pencil"] = O.LoadObject("pencil")
 # load in all the sensors / observers
@@ -96,9 +96,9 @@ plotter = pv.Plotter()
 plotter.add_mesh(sphere, texture=texture)
 # Add the LLH points
 counter = 0
-colors = ["black","orange","grey"]
+colors = ["black","orange","grey","blue","yellow"]
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t = H.ConvertResToVecs(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t = H.ConvertResToVecs(S.Observers[s].Results["almond"])
     if len(x) == 0:
         continue
     points = np.column_stack((x,y,z))
@@ -406,7 +406,7 @@ ps = []
 shapes = ["+","*"]
 counter = 0
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t, rcs, az, el = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
     if len(x) == 0:
         continue
     llh = map.ecef2geodetic(x, y, z)
@@ -513,19 +513,3 @@ cbar3 = fig.colorbar(p3, ax=ax3, shrink=0.7)
 cbar3.set_label("RCS (dBsm)")
 
 plt.show()
-
-
-# xp = math.sin(190/57.295)
-# yp = math.cos(190/57.295)
-# xleft = math.sin(350/57.295)
-# yleft=math.cos(350/57.295)
-# xright = math.sin(345/57.295)
-# yright = math.cos(345/57.295)
-#
-# si = xright*yleft-yright*xleft
-# co = xright*xleft + yleft*yright
-#
-# si = xright*yleft-yright*xleft
-# co = xright*xleft + yleft*yright
-#
-# math.atan2(si,co)*57.295 % 360
