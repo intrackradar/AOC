@@ -78,7 +78,7 @@ def Simulate():
                 # ang <= Observers[s].AzFence[1] and \
                 # (aer[1] >= Observers[s].Fence[1][0]) and
                 # if beamloss > 0:
-                if aer[1] > 0.0 and beamloss > 0:
+                if ang <= Observers[s].AzFence[1] and ang >= 0 and aer[1] > 0.0 and beamloss > 0:
                     snr = rec[-1][0] - 40*math.log10(aer[2]) + Observers[s].LoopGain + 10*math.log10(beamloss)
                     if snr > Observers[s].SNRLimit:
                         Observers[s].Results[Objects[o].Name].append(rec)
