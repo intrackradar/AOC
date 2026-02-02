@@ -36,16 +36,16 @@ startTime = datetime.datetime(2025,1,1,1,1,1,1)
 #     S.Objects[o] = O.LoadObject(OD.objects[o])
 #     break
 S.Objects["pencil"] = O.LoadObject(OD.objects["pencil"])
-# S.Objects["almond"] = O.LoadObject(OD.objects["almond"])
+S.Objects["almond"] = O.LoadObject(OD.objects["almond"])
 # S.Objects["tcone"] = O.LoadObject(OD.objects["tcone"])
 
 # S.Objects["pencil"] = O.LoadObject("pencil")
 # load in all the sensors / observers
 # for s in OD.sensors:
 #     S.Observers[s] = O.LoadObserver(OD.sensors[s])
-S.Observers["fylingdale300"] = O.LoadObserver(OD.sensors["fylingdale300"])
+# S.Observers["fylingdale300"] = O.LoadObserver(OD.sensors["fylingdale300"])
 S.Observers["fylingdale450"] = O.LoadObserver(OD.sensors["fylingdale450"])
-S.Observers["fylingdale600"] = O.LoadObserver(OD.sensors["fylingdale600"])
+# S.Observers["fylingdale600"] = O.LoadObserver(OD.sensors["fylingdale600"])
 S.Observers["cape cod"] = O.LoadObserver(OD.sensors["cape cod"])
 # Set the simulation start time and stop times
 datetime.datetime.fromisoformat(OD.simulation["start time"])
@@ -361,7 +361,7 @@ ax1 = fig.add_subplot(111,projection='3d')
 labels = []
 ps = []
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr= H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
     if len(x) == 0:
         continue
     llh = map.ecef2geodetic(x, y, z)
@@ -384,7 +384,7 @@ ax1 = fig.add_subplot(111,projection='3d')
 labels = []
 ps = []
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
     if len(x) == 0:
         continue
     llh = map.ecef2geodetic(x, y, z)
@@ -409,20 +409,32 @@ ps = []
 shapes = ["+","*"]
 counter = 0
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
     if len(x) == 0:
         continue
     llh = map.ecef2geodetic(x, y, z)
-    p1 = ax1.scatter(x=[tm.timestamp() for tm in t], y=rcs, c=llh[2] / 1000, cmap="jet",marker = shapes[counter])
+    p1 = ax1.scatter(x=[tm.timestamp() for tm in t], y=rcs, cmap="jet",marker = shapes[counter])
     ps.append(p1)
-    labels.append(s)
+    labels.append(s + " almond")
+    counter+=1
+
+shapes = ["+","*"]
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    if len(x) == 0:
+        continue
+    llh = map.ecef2geodetic(x, y, z)
+    p1 = ax1.scatter(x=[tm.timestamp() for tm in t], y=rcs, cmap="jet",marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s + " pencil")
     counter+=1
 
 ax1.set_xlabel("Time")
 ax1.set_ylabel("RCS (dBsm")
 ax1.legend(ps,labels)
-cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
-cbar1.set_label("Altitude (km)")
+# cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+# cbar1.set_label("Altitude (km)")
 ax1.grid()
 plt.show()
 
@@ -433,15 +445,25 @@ ps = []
 shapes = ["+","*"]
 counter = 0
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
     if len(x) == 0:
         continue
     aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
-    p1 = ax1.scatter(x=aer[2]*0.001, y=rcs, cmap="jet",marker = shapes[counter])
+    p1 = ax1.scatter(x=aer[2]*0.001, y=rcs,marker = shapes[counter])
     ps.append(p1)
-    labels.append(s)
+    labels.append(s + " almond")
     counter+=1
 
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(x=aer[2]*0.001, y=rcs,marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s+" pencil")
+    counter+=1
 ax1.set_xlabel("Range (km)")
 ax1.set_ylabel("RCS (dBsm")
 ax1.legend(ps,labels)
@@ -449,6 +471,42 @@ ax1.legend(ps,labels)
 # cbar1.set_label("Altitude (km)")
 ax1.grid()
 plt.show()
+
+
+fig = plt.figure(figsize=(12, 12))
+ax1 = fig.add_subplot(111)
+labels = []
+ps = []
+shapes = ["+","*"]
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(x=aer[2]*0.001, y=snr,marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s + " almond")
+    counter+=1
+
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(x=aer[2]*0.001, y=snr,marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s+" pencil")
+    counter+=1
+ax1.set_xlabel("Range (km)")
+ax1.set_ylabel("SNR")
+ax1.legend(ps,labels)
+# cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+# cbar1.set_label("Altitude (km)")
+ax1.grid()
+plt.show()
+
 
 fig = plt.figure(figsize=(18, 6))
 ax1 = fig.add_subplot(131,projection='3d')

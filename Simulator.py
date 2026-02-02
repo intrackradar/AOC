@@ -59,10 +59,6 @@ def Simulate():
 
                 mag=np.linalg.norm(enu)
 
-                # range unit vector dot with velocity vector for range rate
-                Freq = Observers[s].Frequency+2*(enu[0]*vel[0]+enu[1]*vel[1]+enu[2]*vel[2])*Observers[s].Frequency/(3.0e8*mag)
-                rec = Objects[o].RecordFromObserver(Observers[s].State.Pos, Freq)
-
                 yp = math.cos(aer[0] * Deg2Rad)
                 xp = math.sin(aer[0] * Deg2Rad)
 
@@ -79,7 +75,27 @@ def Simulate():
                 # (aer[1] >= Observers[s].Fence[1][0]) and
                 # if beamloss > 0:
                 if ang <= Observers[s].AzFence[1] and ang >= 0 and aer[1] > 0.0 and beamloss > 0:
-                    snr = rec[-1][0] - 40*math.log10(aer[2]) + Observers[s].LoopGain + 10*math.log10(beamloss)
+
+                    # range unit vector dot with velocity vector for range rate
+                    RCSAvg = 0.0
+                    RCSCount = 0.0
+                    FreqAvg = 0.0
+                    if Observers[s].BandwidthPoints > 1:
+                        for f in np.linspace(Observers[s].Frequency - 0.5 * Observers[s].Bandwidth,
+                                             Observers[s].Frequency + 0.5 * Observers[s].Bandwidth,
+                                             Observers[s].BandwidthPoints):
+                            Freq = f + 2 * (enu[0] * vel[0] + enu[1] * vel[1] + enu[2] * vel[2]) * f / (3.0e8 * mag)
+                            rec = Objects[o].RecordFromObserver(Observers[s].State.Pos, Freq)
+                            RCSAvg += rec[-1][0]
+                            FreqAvg += Freq
+                            RCSCount += 1
+                    else:
+                        RCSAvg = rec[-1][0]
+                        RCSCount = 1
+
+                    RCSAvg /= RCSCount
+                    FreqAvg /= RCSCount
+                    snr = RCSAvg + 20*math.log10(3e8/FreqAvg) - 40*math.log10(aer[2]) + Observers[s].TXGain + Observers[s].RXGain - Observers[s].Losses + 10*math.log10(Observers[s].Power) - 10*math.log10((1.380649 * 10**-23)*(4*math.pi)**3*290) + 10*math.log10(beamloss)
                     if snr > Observers[s].SNRLimit:
                         Observers[s].Results[Objects[o].Name].append(rec)
                         Observers[s].Results[Objects[o].Name][-1].append(snr)

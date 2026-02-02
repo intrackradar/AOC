@@ -6,7 +6,13 @@ cali = {
     "fence":{"az":[270, 90],"el":[3.0]},
     "beamwidth":2.0,
     "frequency":450e6,
-    "snrlimit": 4.0
+    "snrlimit": 4.0,
+    "bandwidth": 10e6,
+    "bandwidthPoints": 10,
+    "losses": 0.0,
+    "TXGain": 40,
+    "RXGain": 40,
+    "Power": 2.5e6
 }
 
 hawaii = {
@@ -16,7 +22,13 @@ hawaii = {
     "fence":{"az":[270, 90],"el":[3.0]},
     "beamwidth":2.0,
     "frequency":450e6,
-    "snrlimit": 4.0
+    "snrlimit": 4.0,
+    "bandwidth": 10e6,
+    "bandwidthPoints": 10,
+    "losses": 0.0,
+    "TXGain": 40,
+    "RXGain": 40,
+    "Power": 2.5e6
 }
 
 cape_cod = {
@@ -26,7 +38,13 @@ cape_cod = {
     "fence":{"az":[0, 360],"el":[3.0]},
     "beamwidth":2.0,
     "frequency":450e6,
-    "snrlimit": 4.0
+    "snrlimit": 4.0,
+    "bandwidth": 10e6,
+    "bandwidthPoints": 10,
+    "losses": 0.0,
+    "TXGain": 40,
+    "RXGain": 40,
+    "Power": 2.5e6
 }
 
 thule = {
@@ -36,7 +54,13 @@ thule = {
     "fence":{"az":[0, 360],"el":[3.0]},
     "beamwidth":2.0,
     "frequency": 450e6,
-    "snrlimit": 4.0
+    "snrlimit": 4.0,
+    "bandwidth": 10e6,
+    "bandwidthPoints": 10,
+    "losses": 0.0,
+    "TXGain": 40,
+    "RXGain": 40,
+    "Power": 2.5e6
 }
 
 fylingdale450 = {
@@ -46,7 +70,13 @@ fylingdale450 = {
     "fence":{"az":[0, 360],"el":[3.0]},
     "beamwidth":2.0,
     "frequency": 450e6,
-    "snrlimit": 4.0
+    "snrlimit": 4.0,
+    "bandwidth": 10e6,
+    "bandwidthPoints": 10,
+    "losses": 0.0,
+    "TXGain": 40,
+    "RXGain": 40,
+    "Power": 2.5e6
 }
 
 fylingdale300 = {
@@ -56,7 +86,13 @@ fylingdale300 = {
     "fence":{"az":[0, 360],"el":[3.0]},
     "beamwidth":2.0,
     "frequency": 300e6,
-    "snrlimit": 4.0
+    "snrlimit": 4.0,
+    "bandwidth": 10e6,
+    "bandwidthPoints": 10,
+    "losses": 0.0,
+    "TXGain": 40,
+    "RXGain": 40,
+    "Power": 2.5e6
 }
 fylingdale600 = {
     "name":"fylingdale600",
@@ -65,15 +101,21 @@ fylingdale600 = {
     "fence":{"az":[0, 360],"el":[3.0]},
     "beamwidth":2.0,
     "frequency": 600e6,
-    "snrlimit": 4.0
+    "snrlimit": 4.0,
+    "bandwidth": 10e6,
+    "bandwidthPoints": 10,
+    "losses": 0.0,
+    "TXGain": 40,
+    "RXGain": 40,
+    "Power": 2.5e6
+
 }
 
 almond = {
     "name":"almond",
-    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_pencil_almond_half_deg.xlsx","sheetname":"almond","frequency":450e6},
-                "449.5":{"url":"C:\\Users\\Jerem\\Downloads\\almond_40_rcs_4495_4505_460.xlsx","sheetname":"449_5","frequency":449.5e6},
-                "450.5":{"url":"C:\\Users\\Jerem\\Downloads\\almond_40_rcs_4495_4505_460.xlsx","sheetname":"450_5","frequency":450.5e6},
-                "460":{"url":"C:\\Users\\Jerem\\Downloads\\almond_40_rcs_4495_4505_460.xlsx","sheetname":"460","frequency":460e6}},
+    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_450MHz","frequency":450e6},
+                "300":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_300MHz","frequency":300e6},
+                "600":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_600MHz","frequency":600e6}},
     "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
                     "stage 2": {"fuel mass":5000, "isp": 300, "thrust": 267e3},
                     "stage 3": {"fuel mass":3000, "isp": 300, "thrust": 155e3}

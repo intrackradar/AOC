@@ -36,7 +36,12 @@ class ParsedJSONObserver:
         ecef = mp.geodetic2ecef(self.Location[0],self.Location[1],self.Location[2])
         self.State = T.StateVector(Pos = T.Vec(x=ecef[0],y=ecef[1], z=ecef[2],t=datetime.datetime(year=2025,month=1,day=1)), Vel = T.Vec(0,0,0,datetime.datetime(year=2025,month=1,day=1)))
         self.SNRLimit = jsonData["snrlimit"]
-
+        self.Power = jsonData["Power"]
+        self.TXGain = jsonData["TXGain"]
+        self.RXGain = jsonData["RXGain"]
+        self.Losses = jsonData["losses"]
+        self.Bandwidth = jsonData["bandwidth"]
+        self.BandwidthPoints = jsonData["bandwidthPoints"]
 
 class ParsedJSONObject:
     def __init__(self, jsonData):

@@ -35,6 +35,7 @@ def ConvertResToVecs2(res):
     rcs = []
     az = []
     el = []
+    snr = []
 
     for r in res:
         x.append(r[0])
@@ -47,5 +48,6 @@ def ConvertResToVecs2(res):
         rcs.append(r[7][0])
         az.append(r[7][1])
         el.append(r[7][2])
+        snr.append(r[8])
 
-    return np.array(x), np.array(y), np.array(z), np.array(vx), np.array(vy), np.array(vz), np.array(t), np.array(rcs), np.array(az), np.array(el)
+    return np.array(x), np.array(y), np.array(z), np.array(vx), np.array(vy), np.array(vz), np.array(t), np.array(rcs), np.array(az), np.array(el), np.array(snr)
