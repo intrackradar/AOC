@@ -35,15 +35,18 @@ startTime = datetime.datetime(2025,1,1,1,1,1,1)
 # for o in OD.objects:
 #     S.Objects[o] = O.LoadObject(OD.objects[o])
 #     break
-# S.Objects["pencil"] = O.LoadObject(OD.objects["pencil"])
-S.Objects["almond"] = O.LoadObject(OD.objects["almond"])
+S.Objects["pencil"] = O.LoadObject(OD.objects["pencil"])
+# S.Objects["almond"] = O.LoadObject(OD.objects["almond"])
 # S.Objects["tcone"] = O.LoadObject(OD.objects["tcone"])
 
 # S.Objects["pencil"] = O.LoadObject("pencil")
 # load in all the sensors / observers
-for s in OD.sensors:
-    S.Observers[s] = O.LoadObserver(OD.sensors[s])
-
+# for s in OD.sensors:
+#     S.Observers[s] = O.LoadObserver(OD.sensors[s])
+S.Observers["fylingdale300"] = O.LoadObserver(OD.sensors["fylingdale300"])
+S.Observers["fylingdale450"] = O.LoadObserver(OD.sensors["fylingdale450"])
+S.Observers["fylingdale600"] = O.LoadObserver(OD.sensors["fylingdale600"])
+S.Observers["cape cod"] = O.LoadObserver(OD.sensors["cape cod"])
 # Set the simulation start time and stop times
 datetime.datetime.fromisoformat(OD.simulation["start time"])
 S.StartTime = datetime.datetime.fromisoformat(OD.simulation["start time"])
@@ -98,7 +101,7 @@ plotter.add_mesh(sphere, texture=texture)
 counter = 0
 colors = ["black","orange","grey","blue","yellow"]
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t = H.ConvertResToVecs(S.Observers[s].Results["almond"])
+    x,y,z,vx,vy,vz,t = H.ConvertResToVecs(S.Observers[s].Results["pencil"])
     if len(x) == 0:
         continue
     points = np.column_stack((x,y,z))

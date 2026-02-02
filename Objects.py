@@ -114,8 +114,10 @@ class ParsedJSONObject:
                 except:
                     continue
             # print(rmap)
-            precision = np.round(np.mean(np.diff(np.array(list(rmap.keys()))) % 360), 1)
-            rcsMap1 = T.RCSMapAzEl(rmap, precision, 180)
+            keys = rmap.keys()
+            azPrecision = np.round(np.mean(np.diff(np.array(list(keys)[0:50])) % 360), 1)
+            elPrecision = np.round(np.mean(np.diff(np.array(list(rmap[list(keys)[0]])[0:10])) % 360), 1)
+            rcsMap1 = T.RCSMapAzEl(rmap, azPrecision, elPrecision, 180)
             rcsDataSets.append(rcsMap1)
             rcsFreqs.append(jsonData["RCSData"][f]["frequency"])
 

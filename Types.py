@@ -50,9 +50,10 @@ class RCSMap:
         return q1[0]*(1-scale) + scale*q2[0], q1[1], q1[2]
 ## RCS map takes in a map of az and el values rcsData[az][el] at a step size
 class RCSMapAzEl:
-    def __init__(self, mapOfValues, precision,azShift):
+    def __init__(self, mapOfValues, azprecision, elprecision,azShift):
         self.rcsData = mapOfValues
-        self.Precision = precision
+        self.azPrecision = azprecision
+        self.elPrecision = elprecision
         self.azShift = azShift
 
     def Value(self, targetState, observerState):
@@ -85,13 +86,13 @@ class RCSMapAzEl:
         val = 0.0
         count = 0.0
 
-        az = int(az / self.Precision) * self.Precision
-        el = int(el / self.Precision) * self.Precision
+        az = int(az / self.azPrecision) * self.azPrecision
+        el = int(el / self.elPrecision) * self.elPrecision
 
         azSign = 1
         elSign = 1
-        dAz = (az1 - az) / self.Precision
-        dEl = (el1 - el) / self.Precision
+        dAz = (az1 - az) / self.azPrecision
+        dEl = (el1 - el) / self.elPrecision
 
         if dAz < 0:
             azSign = -1
@@ -102,9 +103,9 @@ class RCSMapAzEl:
             dEl = math.fabs(dEl)
 
         q00 = self.rcsData[math.fabs(az)][math.fabs(el)]
-        q01 = self.rcsData[math.fabs(az)][math.fabs(el + elSign * self.Precision)]
-        q10 = self.rcsData[math.fabs(az + azSign * self.Precision)][math.fabs(el)]
-        q11 = self.rcsData[math.fabs(az + azSign * self.Precision)][math.fabs(el + elSign * self.Precision)]
+        q01 = self.rcsData[math.fabs(az)][math.fabs(el + elSign * self.elPrecision)]
+        q10 = self.rcsData[math.fabs(az + azSign * self.azPrecision)][math.fabs(el)]
+        q11 = self.rcsData[math.fabs(az + azSign * self.azPrecision)][math.fabs(el + elSign * self.elPrecision)]
 
         azScale1 = dAz * q10 + (1-dAz) * q00
         azScale2 = dAz * q11 + (1-dAz) * q01

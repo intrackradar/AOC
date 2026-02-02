@@ -39,8 +39,8 @@ thule = {
     "snrlimit": 4.0
 }
 
-fylingdale = {
-    "name":"fylingdale",
+fylingdale450 = {
+    "name":"fylingdale450",
     "loopgain": 310,
     "location": {"lat":57.6, "lon":-4.5, "heightM":10},
     "fence":{"az":[0, 360],"el":[3.0]},
@@ -49,6 +49,24 @@ fylingdale = {
     "snrlimit": 4.0
 }
 
+fylingdale300 = {
+    "name":"fylingdale300",
+    "loopgain": 310,
+    "location": {"lat":57.6, "lon":-4.5, "heightM":10},
+    "fence":{"az":[0, 360],"el":[3.0]},
+    "beamwidth":2.0,
+    "frequency": 300e6,
+    "snrlimit": 4.0
+}
+fylingdale600 = {
+    "name":"fylingdale600",
+    "loopgain": 310,
+    "location": {"lat":57.6, "lon":-4.5, "heightM":10},
+    "fence":{"az":[0, 360],"el":[3.0]},
+    "beamwidth":2.0,
+    "frequency": 600e6,
+    "snrlimit": 4.0
+}
 
 almond = {
     "name":"almond",
@@ -69,10 +87,11 @@ almond = {
     "Drymass": 2000,
     "Propagator Time Step": 0.25
 }
-
 pencil = {
     "name":"pencil",
-    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\AOC_az_el_450MHz_pencil_almond_half_deg.xlsx","sheetname":"pencil","frequency":450e6}},
+    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"18m_450MHz","frequency":450e6},
+                "300":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"18m_300MHz","frequency":300e6},
+                "600":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"18m_600MHz","frequency":600e6}},
     "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
                     "stage 2": {"fuel mass":5000, "isp": 300, "thrust": 267e3},
                     "stage 3": {"fuel mass":3000, "isp": 300, "thrust": 155e3}
@@ -86,6 +105,28 @@ pencil = {
     "Drymass": 2000,
     "Propagator Time Step": 0.25
 }
+
+# pencil = {
+#     "name":"pencil",
+#     "RCSData": {"449.5":{"url":"C:\\Users\\Jerem\\Downloads\\pencil_rcs_4495_4505_460_300_450_600.xlsx","sheetname":"449_5","frequency":449.5e6},
+#                 "450.5":{"url":"C:\\Users\\Jerem\\Downloads\\pencil_rcs_4495_4505_460_300_450_600.xlsx","sheetname":"450_5","frequency":450.5e6},
+#                 "460":{"url":"C:\\Users\\Jerem\\Downloads\\pencil_rcs_4495_4505_460_300_450_600.xlsx","sheetname":"460","frequency":460e6},
+#                 "300":{"url":"C:\\Users\\Jerem\\Downloads\\pencil_rcs_4495_4505_460_300_450_600.xlsx","sheetname":"300","frequency":300e6},
+#                 "450":{"url":"C:\\Users\\Jerem\\Downloads\\pencil_rcs_4495_4505_460_300_450_600.xlsx","sheetname":"450","frequency":450e6},
+#                 "600":{"url":"C:\\Users\\Jerem\\Downloads\\pencil_rcs_4495_4505_460_300_450_600.xlsx","sheetname":"600","frequency":600e6}},
+#     "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
+#                     "stage 2": {"fuel mass":5000, "isp": 300, "thrust": 267e3},
+#                     "stage 3": {"fuel mass":3000, "isp": 300, "thrust": 155e3}
+#                     },
+#     "Launch Location":{"lat":35,"lon":51,"heightM":0},
+#     "Launch Time":"2025-01-01T01:01:00.000Z",
+#     "Headings":{"Heading 1":{"Time Range":["2025-01-01T01:01:00.000Z", "2025-01-01T01:01:30.000Z"],"Pointing":[0, 90]},
+#                 "Heading 2":{"Time Range":["2025-01-01T01:01:30.000Z", "2025-01-01T01:06:30.000Z"],"Pointing":[317, 14]}
+#                 },
+#     "Aerodynamics":{"Cd":0.044,"A":2.2},
+#     "Drymass": 2000,
+#     "Propagator Time Step": 0.25
+# }
 
 tcone = {
     "name":"tcone",
@@ -139,5 +180,5 @@ x29 = {
 }
 
 objects = {"x29":x29,"tcone":tcone,"tcone2":tcone2,"pencil":pencil,"almond":almond}
-sensors = {"cali":cali, "hawaii": hawaii, "cape cod":cape_cod, "thule":thule,"fylingdale":fylingdale}
+sensors = {"cali":cali, "hawaii": hawaii, "cape cod":cape_cod, "thule":thule,"fylingdale450":fylingdale450,"fylingdale300":fylingdale300,"fylingdale600":fylingdale600}
 simulation = {"start time":"2025-01-01T01:01:00.000Z", "stop time":"2025-01-01T01:51:00.000Z","time step":1.0}
