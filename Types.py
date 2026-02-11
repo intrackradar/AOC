@@ -2,7 +2,7 @@ import datetime
 
 import numpy as np
 import math
-
+import Helper as H
 import pymap3d
 import pymap3d as map
 
@@ -40,6 +40,7 @@ class RCSMap:
         q1 = self.RCSAzElMaps[ind].Value(targetState, observerState)
         q2 = 0
         scale = 0
+
         if Freq > self.FreqVals[ind]:
             q2 = self.RCSAzElMaps[ind+1].Value(targetState, observerState)
             scale = (Freq-self.FreqVals[ind])/(self.FreqVals[ind+1]-self.FreqVals[ind])
@@ -59,29 +60,43 @@ class RCSMapAzEl:
     def Value(self, targetState, observerState):
 
         targetPos = np.array([targetState.Pos.x,targetState.Pos.y,targetState.Pos.z])
-        targetVel = np.array([targetState.Vel.x,targetState.Vel.y,targetState.Vel.z])
         observerPos = np.array([observerState.x,observerState.y,observerState.z])
         
-        targetPointing = targetPos / np.linalg.norm(targetPos)
         dPos = -targetPos + observerPos
-        posPointing = dPos / np.linalg.norm(dPos)
-        velPointing = targetVel / np.linalg.norm(targetVel)
-        x = np.dot(posPointing,velPointing)
+        obsPointing = dPos / np.linalg.norm(dPos)
 
-        yUnit = np.cross(velPointing,-targetPointing)
-        yUnit = yUnit / np.linalg.norm(yUnit)
 
-        zUnit = np.cross(velPointing, yUnit)
-        zUnit = zUnit/np.linalg.norm(zUnit)
+        q0 = targetState.Qs[0]
+        q1 = targetState.Qs[1]
+        q2 = targetState.Qs[2]
+        q3 = targetState.Qs[3]
+        xUnit, yUnit, zUnit = H.ConvertQs2UnitVecs(q0, q1, q2, q3)
 
-        y = np.dot(posPointing,yUnit)
-        z = np.dot(posPointing,zUnit)
+        x = np.dot(obsPointing, xUnit)
+        y = np.dot(obsPointing, yUnit)
+        z = np.dot(obsPointing, zUnit)
 
         az = np.atan2(y,x)*180/math.pi
         el = np.atan2(z,math.sqrt(x*x+y*y)) * 180/math.pi
-        el1 = el
+        print("Value: az, el ", az, el)
+        return self.GetRCS(az, el)
 
-        az = (az - self.azShift) % 180
+    def Direct(self, az1, el1):
+        az = int(az1 * self.Precision)
+        el = int(el1 * self.Precision)
+        print(az, el, az1, el1)
+        return self.rcsData[math.fabs(az)][math.fabs(el)], az1, el1
+
+    def GetRCS(self, az, el):
+        print("GetRCS", az, el)
+        el1 = el
+        az = (az - self.azShift)
+        if az > 180:
+            az = 360 - az
+
+        if az < -180:
+            az = -360 - az
+
         az1 = az
         val = 0.0
         count = 0.0
@@ -102,26 +117,19 @@ class RCSMapAzEl:
             elSign = -1
             dEl = math.fabs(dEl)
 
-        q00 = self.rcsData[math.fabs(az)][math.fabs(el)]
-        q01 = self.rcsData[math.fabs(az)][math.fabs(el + elSign * self.elPrecision)]
-        q10 = self.rcsData[math.fabs(az + azSign * self.azPrecision)][math.fabs(el)]
-        q11 = self.rcsData[math.fabs(az + azSign * self.azPrecision)][math.fabs(el + elSign * self.elPrecision)]
+        q00 = 10**(self.rcsData[math.fabs(az)][math.fabs(el)]/10)
+        q01 = 10**(self.rcsData[math.fabs(az)][math.fabs(el + elSign * self.elPrecision)]/10)
+        q10 = 10**(self.rcsData[math.fabs(az + azSign * self.azPrecision)][math.fabs(el)]/10)
+        q11 = 10**(self.rcsData[math.fabs(az + azSign * self.azPrecision)][math.fabs(el + elSign * self.elPrecision)]/10)
 
-        azScale1 = dAz * q10 + (1-dAz) * q00
-        azScale2 = dAz * q11 + (1-dAz) * q01
+        azScale1 = dAz * q10 + (1 - dAz) * q00
+        azScale2 = dAz * q11 + (1 - dAz) * q01
 
+        elScale = dEl * azScale2 + (1 - dEl) * azScale1
 
-        elScale = dEl*azScale2+(1-dEl)*azScale1
-
-
-        return elScale, az1, el1
-
-    def Direct(self, az1, el1):
-        az = int(az1 * self.Precision)
-        el = int(el1 * self.Precision)
-        print(az, el, az1, el1)
-        return self.rcsData[math.fabs(az)][math.fabs(el)], az1, el1
-
+        # print(dAz, dEl, elScale, q00, q10, q01, q11, 0.25*(q00+q01+q10+q11))
+        print("Get RCS: az, el ", az, el, 10*math.log10(elScale))
+        return 10*math.log10(elScale), az1, el1
 class RCSAlgorithm:
     def __init__(self, scale):
         self.scale = scale
@@ -169,9 +177,10 @@ class Vec:
 
 
 class StateVector:
-    def __init__(self,Pos:Vec, Vel:Vec):
+    def __init__(self,Pos:Vec, Vel:Vec, Qs):
         self.Pos = Pos
         self.Vel = Vel
+        self.Qs = Qs
 
 
 class Obj:

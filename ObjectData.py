@@ -8,11 +8,12 @@ cali = {
     "frequency":450e6,
     "snrlimit": 4.0,
     "bandwidth": 10e6,
-    "bandwidthPoints": 10,
+    "bandwidthPoints": 1,
     "losses": 0.0,
     "TXGain": 40,
     "RXGain": 40,
-    "Power": 2.5e6
+    "Power": 2.5e6,
+    "PulseTime": 0.1
 }
 
 hawaii = {
@@ -24,11 +25,12 @@ hawaii = {
     "frequency":450e6,
     "snrlimit": 4.0,
     "bandwidth": 10e6,
-    "bandwidthPoints": 10,
+    "bandwidthPoints": 1,
     "losses": 0.0,
     "TXGain": 40,
     "RXGain": 40,
-    "Power": 2.5e6
+    "Power": 2.5e6,
+    "PulseTime": 0.1
 }
 
 cape_cod = {
@@ -40,11 +42,12 @@ cape_cod = {
     "frequency":450e6,
     "snrlimit": 4.0,
     "bandwidth": 10e6,
-    "bandwidthPoints": 10,
+    "bandwidthPoints": 1,
     "losses": 0.0,
-    "TXGain": 40,
-    "RXGain": 40,
-    "Power": 2.5e6
+    "TXGain": 39,
+    "RXGain": 39,
+    "Power": 2.5e6,
+    "PulseTime": 0.1
 }
 
 thule = {
@@ -56,11 +59,12 @@ thule = {
     "frequency": 450e6,
     "snrlimit": 4.0,
     "bandwidth": 10e6,
-    "bandwidthPoints": 10,
+    "bandwidthPoints": 1,
     "losses": 0.0,
     "TXGain": 40,
     "RXGain": 40,
-    "Power": 2.5e6
+    "Power": 2.5e6,
+    "PulseTime": 0.1
 }
 
 fylingdale450 = {
@@ -72,11 +76,12 @@ fylingdale450 = {
     "frequency": 450e6,
     "snrlimit": 4.0,
     "bandwidth": 10e6,
-    "bandwidthPoints": 10,
+    "bandwidthPoints": 1,
     "losses": 0.0,
     "TXGain": 40,
     "RXGain": 40,
-    "Power": 2.5e6
+    "Power": 2.5e6,
+    "PulseTime": 0.1
 }
 
 fylingdale300 = {
@@ -88,11 +93,12 @@ fylingdale300 = {
     "frequency": 300e6,
     "snrlimit": 4.0,
     "bandwidth": 10e6,
-    "bandwidthPoints": 10,
+    "bandwidthPoints": 1,
     "losses": 0.0,
     "TXGain": 40,
     "RXGain": 40,
-    "Power": 2.5e6
+    "Power": 2.5e6,
+    "PulseTime": 0.1
 }
 fylingdale600 = {
     "name":"fylingdale600",
@@ -103,17 +109,39 @@ fylingdale600 = {
     "frequency": 600e6,
     "snrlimit": 4.0,
     "bandwidth": 10e6,
-    "bandwidthPoints": 10,
+    "bandwidthPoints": 1,
     "losses": 0.0,
     "TXGain": 40,
     "RXGain": 40,
-    "Power": 2.5e6
+    "Power": 2.5e6,
+    "PulseTime": 0.1
 
 }
 
 almond = {
     "name":"almond",
-    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_450MHz","frequency":450e6},
+    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_450MHz_2degel","frequency":450e6},
+                "300":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_300MHz","frequency":300e6},
+                "600":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_600MHz","frequency":600e6}},
+    "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
+                    "stage 2": {"fuel mass":5000, "isp": 300, "thrust": 267e3},
+                    "stage 3": {"fuel mass":3000, "isp": 300, "thrust": 155e3}
+                    },
+    "Launch Location":{"lat":35,"lon":51,"heightM":0},
+    "Launch Time":"2025-01-01T01:01:00.000Z",
+    "Headings":{"Heading 1":{"Time Range":["2025-01-01T01:01:00.000Z", "2025-01-01T01:01:30.000Z"],"Pointing":[0, 90]},
+                "Heading 2":{"Time Range":["2025-01-01T01:01:30.000Z", "2025-01-01T01:06:30.000Z"],"Pointing":[317, 14]}
+                },
+    "Trajectory":"middleeasttrajectory.csv",
+    "Aerodynamics":{"Cd":0.044,"A":2.2},
+    "Drymass": 2000,
+    "Propagator Time Step": 0.25,
+    "azOffset": 0
+}
+
+almondhalf = {
+    "name":"almondhalf",
+    "RCSData": {"450half":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_450MHz_halfdeg","frequency":450e6},
                 "300":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_300MHz","frequency":300e6},
                 "600":{"url":"C:\\Users\\Jerem\\Downloads\\almond.xlsx","sheetname":"119in_600MHz","frequency":600e6}},
     "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
@@ -127,11 +155,12 @@ almond = {
                 },
     "Aerodynamics":{"Cd":0.044,"A":2.2},
     "Drymass": 2000,
-    "Propagator Time Step": 0.25
+    "Propagator Time Step": 0.25,
+    "azOffset": 0
 }
 pencil = {
     "name":"pencil",
-    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"18m_450MHz","frequency":450e6},
+    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"18m_450MHz_halfdeg","frequency":450e6},
                 "300":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"18m_300MHz","frequency":300e6},
                 "600":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"18m_600MHz","frequency":600e6}},
     "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
@@ -145,7 +174,89 @@ pencil = {
                 },
     "Aerodynamics":{"Cd":0.044,"A":2.2},
     "Drymass": 2000,
-    "Propagator Time Step": 0.25
+    "Propagator Time Step": 0.25,
+    "azOffset": 180
+}
+
+pencil1m = {
+    "name":"pencil_1m",
+    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_450MHz_quarterdeg","frequency":450e6},
+                "300":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_300MHz_quarterdeg","frequency":300e6},
+                "600":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_600MHz","frequency":600e6}},
+    "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
+                    "stage 2": {"fuel mass":5000, "isp": 300, "thrust": 267e3},
+                    "stage 3": {"fuel mass":3000, "isp": 300, "thrust": 155e3}
+                    },
+    "Launch Location":{"lat":35,"lon":51,"heightM":0},
+    "Launch Time":"2025-01-01T01:01:00.000Z",
+    "Headings":{"Heading 1":{"Time Range":["2025-01-01T01:01:00.000Z", "2025-01-01T01:01:30.000Z"],"Pointing":[0, 90]},
+                "Heading 2":{"Time Range":["2025-01-01T01:01:30.000Z", "2025-01-01T01:06:30.000Z"],"Pointing":[317, 14]}
+                },
+    "Aerodynamics":{"Cd":0.044,"A":2.2},
+    # "Trajectory":"middleeasttrajectory.csv",
+    "Drymass": 2000,
+    "Propagator Time Step": 0.25,
+    "azOffset": 180
+}
+
+pencil1mcache = {
+    "name":"pencil_1m",
+    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_450MHz_quarterdeg","frequency":450e6},
+                "300":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_300MHz_quarterdeg","frequency":300e6},
+                "600":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_600MHz","frequency":600e6}},
+    "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
+                    "stage 2": {"fuel mass":5000, "isp": 300, "thrust": 267e3},
+                    "stage 3": {"fuel mass":3000, "isp": 300, "thrust": 155e3}
+                    },
+    "Launch Location":{"lat":35,"lon":51,"heightM":0},
+    "Launch Time":"2025-01-01T01:01:00.000Z",
+    "Headings":{"Heading 1":{"Time Range":["2025-01-01T01:01:00.000Z", "2025-01-01T01:01:30.000Z"],"Pointing":[0, 90]},
+                "Heading 2":{"Time Range":["2025-01-01T01:01:30.000Z", "2025-01-01T01:06:30.000Z"],"Pointing":[317, 14]}
+                },
+    "Aerodynamics":{"Cd":0.044,"A":2.2},
+    "Trajectory":"middleeasttrajectory.csv",
+    "Drymass": 2000,
+    "Propagator Time Step": 0.25,
+    "azOffset": 180
+}
+pencil1mhalf = {
+    "name":"pencil_1m_half",
+    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_450MHZ_halfdeg","frequency":450e6},
+                "300":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_300MHz_halfdeg","frequency":300e6},
+                "600":{"url":"C:\\Users\\Jerem\\Downloads\\pencil.xlsx","sheetname":"1m_600MHz","frequency":600e6}},
+    "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
+                    "stage 2": {"fuel mass":5000, "isp": 300, "thrust": 267e3},
+                    "stage 3": {"fuel mass":3000, "isp": 300, "thrust": 155e3}
+                    },
+    "Launch Location":{"lat":35,"lon":51,"heightM":0},
+    "Launch Time":"2025-01-01T01:01:00.000Z",
+    "Headings":{"Heading 1":{"Time Range":["2025-01-01T01:01:00.000Z", "2025-01-01T01:01:30.000Z"],"Pointing":[0, 90]},
+                "Heading 2":{"Time Range":["2025-01-01T01:01:30.000Z", "2025-01-01T01:06:30.000Z"],"Pointing":[317, 14]}
+                },
+    "Aerodynamics":{"Cd":0.044,"A":2.2},
+    "Trajectory":"middleeasttrajectory.csv",
+    "Drymass": 2000,
+    "Propagator Time Step": 0.25,
+    "azOffset": 180
+}
+sphere = {
+    "name":"sphere",
+    "RCSData": {"450":{"url":"C:\\Users\\Jerem\\Downloads\\sphere.xlsx","sheetname":"709in_450MHz","frequency":450e6},
+                "300":{"url":"C:\\Users\\Jerem\\Downloads\\sphere.xlsx","sheetname":"709in_300MHz","frequency":300e6},
+                "600":{"url":"C:\\Users\\Jerem\\Downloads\\sphere.xlsx","sheetname":"709in_600MHz","frequency":600e6}},
+    "RocketStages":{"stage 1": {"fuel mass":30000, "isp": 300, "thrust": 790e3},
+                    "stage 2": {"fuel mass":5000, "isp": 300, "thrust": 267e3},
+                    "stage 3": {"fuel mass":3000, "isp": 300, "thrust": 155e3}
+                    },
+    "Launch Location":{"lat":35,"lon":51,"heightM":0},
+    "Launch Time":"2025-01-01T01:01:00.000Z",
+    "Headings":{"Heading 1":{"Time Range":["2025-01-01T01:01:00.000Z", "2025-01-01T01:01:30.000Z"],"Pointing":[0, 90]},
+                "Heading 2":{"Time Range":["2025-01-01T01:01:30.000Z", "2025-01-01T01:06:30.000Z"],"Pointing":[317, 14]}
+                },
+    "Aerodynamics":{"Cd":0.044,"A":2.2},
+    "Drymass": 2000,
+    "Propagator Time Step": 0.25,
+    "azOffset": 180
 }
 
 # pencil = {
@@ -221,6 +332,6 @@ x29 = {
     "Propagator Time Step": 0.25
 }
 
-objects = {"x29":x29,"tcone":tcone,"tcone2":tcone2,"pencil":pencil,"almond":almond}
+objects = {"x29":x29,"tcone":tcone,"tcone2":tcone2,"pencil":pencil,"pencil_1m_half":pencil1mhalf,"pencil_1m":pencil1m,"pencil_1m_cache":pencil1mcache,"almond":almond,"almondhalf":almondhalf,"sphere":sphere}
 sensors = {"cali":cali, "hawaii": hawaii, "cape cod":cape_cod, "thule":thule,"fylingdale450":fylingdale450,"fylingdale300":fylingdale300,"fylingdale600":fylingdale600}
 simulation = {"start time":"2025-01-01T01:01:00.000Z", "stop time":"2025-01-01T01:51:00.000Z","time step":1.0}

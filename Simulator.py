@@ -86,16 +86,21 @@ def Simulate():
                                              Observers[s].BandwidthPoints):
                             Freq = f + 2 * (enu[0] * vel[0] + enu[1] * vel[1] + enu[2] * vel[2]) * f / (3.0e8 * mag)
                             rec = Objects[o].RecordFromObserver(Observers[s].State.Pos, Freq)
-                            RCSAvg += rec[-1][0]
+                            RCSAvg += 10**(rec[-1][0]/10)
                             FreqAvg += Freq
                             RCSCount += 1
                     else:
-                        RCSAvg = rec[-1][0]
+                        f = Observers[s].Frequency
+                        Freq = f + 2 * (enu[0] * vel[0] + enu[1] * vel[1] + enu[2] * vel[2]) * f / (3.0e8 * mag)
+                        rec = Objects[o].RecordFromObserver(Observers[s].State.Pos, Freq)
+                        RCSAvg = 10**(rec[-1][0]/10)
+                        FreqAvg += Freq
                         RCSCount = 1
 
                     RCSAvg /= RCSCount
+                    RCSAvg = 10*math.log10(RCSAvg)
                     FreqAvg /= RCSCount
-                    snr = RCSAvg + 20*math.log10(3e8/FreqAvg) - 40*math.log10(aer[2]) + Observers[s].TXGain + Observers[s].RXGain - Observers[s].Losses + 10*math.log10(Observers[s].Power) - 10*math.log10((1.380649 * 10**-23)*(4*math.pi)**3*290) + 10*math.log10(beamloss)
+                    snr = RCSAvg + 20*math.log10(3e8/FreqAvg) - 40*math.log10(aer[2]) + Observers[s].TXGain + Observers[s].RXGain - Observers[s].Losses + 10*math.log10(Observers[s].Power) - 10*math.log10((1.380649 * 10**-23)*(4*math.pi)**3*290*Observers[s].Bandwidth) + 10*math.log10(beamloss)+10*math.log10(Observers[s].PulseTime*Observers[s].Bandwidth)
                     if snr > Observers[s].SNRLimit:
                         Observers[s].Results[Objects[o].Name].append(rec)
                         Observers[s].Results[Objects[o].Name][-1].append(snr)

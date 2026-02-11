@@ -8,6 +8,8 @@ import ObjectData as OD
 import Types as T
 import numpy as np
 import pymap3d as mp
+from pathlib import Path
+import Trajectory as Tr
 Objects = {}
 ObjectJSON = OD.objects
 
@@ -34,7 +36,7 @@ class ParsedJSONObserver:
         self.Frequency = jsonData["frequency"]
         self.Results = {}
         ecef = mp.geodetic2ecef(self.Location[0],self.Location[1],self.Location[2])
-        self.State = T.StateVector(Pos = T.Vec(x=ecef[0],y=ecef[1], z=ecef[2],t=datetime.datetime(year=2025,month=1,day=1)), Vel = T.Vec(0,0,0,datetime.datetime(year=2025,month=1,day=1)))
+        self.State = T.StateVector(Pos = T.Vec(x=ecef[0],y=ecef[1], z=ecef[2],t=datetime.datetime(year=2025,month=1,day=1)), Vel = T.Vec(0,0,0,datetime.datetime(year=2025,month=1,day=1)),Qs = [])
         self.SNRLimit = jsonData["snrlimit"]
         self.Power = jsonData["Power"]
         self.TXGain = jsonData["TXGain"]
@@ -42,6 +44,7 @@ class ParsedJSONObserver:
         self.Losses = jsonData["losses"]
         self.Bandwidth = jsonData["bandwidth"]
         self.BandwidthPoints = jsonData["bandwidthPoints"]
+        self.PulseTime = jsonData["PulseTime"]
 
 class ParsedJSONObject:
     def __init__(self, jsonData):
@@ -59,35 +62,10 @@ class ParsedJSONObject:
             except:
                 break
 
-        RE = P.RocketEngine(Stages)
-        self.rocketEngine = RE
-
-        self.LaunchLocation = [jsonData["Launch Location"]["lat"], jsonData["Launch Location"]["lon"], jsonData["Launch Location"]["heightM"]]
-        self.LaunchTime = datetime.datetime.fromisoformat(jsonData["Launch Time"])
-
-        # parse headings
-        Headings = []
-        st = 1
-
-        while True:
-
-            try:
-                headingData = jsonData["Headings"]["Heading "+str(st)]
-                st += 1
-                az = headingData["Pointing"][0]
-                el = headingData["Pointing"][1]
-                baseLoc = np.array(mp.geodetic2eci(self.LaunchLocation[0], self.LaunchLocation[1], self.LaunchLocation[2], self.LaunchTime))
-                pointings = np.array(mp.aer2eci(az, el, 1.0, self.LaunchLocation[0], self.LaunchLocation[1], self.LaunchLocation[2], self.LaunchTime)) - baseLoc
-                tempH = P.Heading([datetime.datetime.fromisoformat(headingData["Time Range"][0]),datetime.datetime.fromisoformat(headingData["Time Range"][1])],pointings)
-                Headings.append(tempH)
-            except:
-                break
-        self.Headings = P.Headings(Headings)
-        print(Headings)
-        self.Propagator = P.RK4Propagator(self.LaunchLocation,self.LaunchTime,jsonData["Propagator Time Step"],RE,jsonData["Aerodynamics"]["Cd"],jsonData["Aerodynamics"]["A"],self.Headings,jsonData["Drymass"])
-
         rcsDataSets = []
         rcsFreqs = []
+        self.Name = jsonData["name"]
+        print("Loading RCS Data for ", self.Name)
         for f in jsonData["RCSData"]:
             data = pd.read_excel(jsonData["RCSData"][f]["url"], sheet_name=jsonData["RCSData"][f]["sheetname"])
             rmap = {}
@@ -120,9 +98,9 @@ class ParsedJSONObject:
                     continue
             # print(rmap)
             keys = rmap.keys()
-            azPrecision = np.round(np.mean(np.diff(np.array(list(keys)[0:50])) % 360), 1)
-            elPrecision = np.round(np.mean(np.diff(np.array(list(rmap[list(keys)[0]])[0:10])) % 360), 1)
-            rcsMap1 = T.RCSMapAzEl(rmap, azPrecision, elPrecision, 180)
+            azPrecision = np.round(np.mean(np.diff(np.array(list(keys)[0:50])) % 360), 2)
+            elPrecision = np.round(np.mean(np.diff(np.array(list(rmap[list(keys)[0]])[0:10])) % 360), 2)
+            rcsMap1 = T.RCSMapAzEl(rmap, azPrecision, elPrecision, jsonData["azOffset"])
             rcsDataSets.append(rcsMap1)
             rcsFreqs.append(jsonData["RCSData"][f]["frequency"])
 
@@ -132,7 +110,89 @@ class ParsedJSONObject:
         rcsFreqs = rcsFreqs[inds]
         rcsDataSets = rcsDataSets[inds]
         self.RCSData = T.RCSMap(rcsDataSets, rcsFreqs)
-        self.Name = jsonData["name"]
+
+
+        if "Trajectory" in jsonData:
+            print("Loading Trajectory for ", self.Name)
+            script_dir = Path(__file__).parent
+            with open(script_dir / jsonData["Trajectory"],'r') as fi:
+                tm = []
+                xs = []
+                ys = []
+                zs = []
+                q0s = []
+                q1s = []
+                q2s = []
+                q3s = []
+                for line in fi:
+                    vals = line.split(",")
+                    try:
+                        tm.append(float(vals[0]))
+                        xs.append(float(vals[1]))
+                        ys.append(float(vals[2]))
+                        zs.append(float(vals[3]))
+                        q0s.append(float(vals[4]))
+                        q1s.append(float(vals[5]))
+                        q2s.append(float(vals[6]))
+                        q3s.append(float(vals[7]))
+                    except:
+                        1+1
+            self.Propagator = P.Trajectory(tm, xs,ys,zs, q0s, q1s, q2s, q3s)
+
+
+        else:
+            print("Calculating trajectory for ", self.Name)
+            RE = P.RocketEngine(Stages)
+            self.rocketEngine = RE
+
+            self.LaunchLocation = [jsonData["Launch Location"]["lat"], jsonData["Launch Location"]["lon"], jsonData["Launch Location"]["heightM"]]
+            self.LaunchTime = datetime.datetime.fromisoformat(jsonData["Launch Time"])
+
+            # parse headings
+            Headings = []
+            st = 1
+
+            while True:
+
+                try:
+                    headingData = jsonData["Headings"]["Heading "+str(st)]
+                    st += 1
+                    az = headingData["Pointing"][0]
+                    el = headingData["Pointing"][1]
+                    baseLoc = np.array(mp.geodetic2eci(self.LaunchLocation[0], self.LaunchLocation[1], self.LaunchLocation[2], self.LaunchTime))
+                    pointings = np.array(mp.aer2eci(az, el, 1.0, self.LaunchLocation[0], self.LaunchLocation[1], self.LaunchLocation[2], self.LaunchTime)) - baseLoc
+                    tempH = P.Heading([datetime.datetime.fromisoformat(headingData["Time Range"][0]),datetime.datetime.fromisoformat(headingData["Time Range"][1])],pointings)
+                    Headings.append(tempH)
+                except:
+                    break
+            self.Headings = P.Headings(Headings)
+            self.Propagator = P.RK4Propagator(self.LaunchLocation,self.LaunchTime,jsonData["Propagator Time Step"],RE,jsonData["Aerodynamics"]["Cd"],jsonData["Aerodynamics"]["A"],self.Headings,jsonData["Drymass"])
+            self.Obj = T.Obj(self.Name, self.RCSData, self.Propagator)
+
+            states = Tr.GenerateTrajectory(self.Obj, self.LaunchTime, datetime.datetime.fromisoformat(OD.simulation["stop time"]),1.0)
+            tm = []
+            xs = []
+            ys = []
+            zs = []
+            q0s = []
+            q1s = []
+            q2s = []
+            q3s = []
+
+            for s in states:
+                try:
+                    tm.append((s[0].timestamp()))
+                    xs.append((s[1]))
+                    ys.append((s[2]))
+                    zs.append((s[3]))
+                    q0s.append(s[7])
+                    q1s.append(s[8])
+                    q2s.append(s[9])
+                    q3s.append(s[10])
+                except:
+                    1+1
+            self.Propagator = P.Trajectory(tm, xs,ys,zs, q0s, q1s, q2s, q3s)
+
         self.Obj = T.Obj(self.Name,self.RCSData,self.Propagator)
 
 

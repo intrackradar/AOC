@@ -7,11 +7,14 @@ import math
 import importlib
 import matplotlib
 import pandas as pd
+from pathlib import Path
 matplotlib.use('QtAgg')
 import matplotlib.pyplot as plt
 import Objects as O
 import ObjectData as OD
 import Helper as H
+import Trajectory as Tr
+importlib.reload(Tr)
 importlib.reload(H)
 importlib.reload(O)
 importlib.reload(OD)
@@ -35,18 +38,22 @@ startTime = datetime.datetime(2025,1,1,1,1,1,1)
 # for o in OD.objects:
 #     S.Objects[o] = O.LoadObject(OD.objects[o])
 #     break
-S.Objects["pencil"] = O.LoadObject(OD.objects["pencil"])
-S.Objects["almond"] = O.LoadObject(OD.objects["almond"])
+S.Objects["pencil_1m_half"] = O.LoadObject(OD.objects["pencil_1m_half"])
+# S.Objects["pencil_1m"] = O.LoadObject(OD.objects["pencil_1m"])
+S.Objects["pencil_1m"] = O.LoadObject(OD.objects["pencil_1m"])
+# S.Objects["almondhalf"] = O.LoadObject(OD.objects["almondhalf"])
+# S.Objects["sphere"] = O.LoadObject(OD.objects["sphere"])
 # S.Objects["tcone"] = O.LoadObject(OD.objects["tcone"])
-
+# states = Tr.GenerateTrajectory(S.Objects["pencil_1m"], datetime.datetime.fromisoformat(OD.simulation["start time"]),datetime.datetime.fromisoformat(OD.simulation["stop time"]),1.0)
+# H.WriteTrajectory(states, "C:\\Users\\Jerem\\Downloads\\middleeasttrajectory.csv")
 # S.Objects["pencil"] = O.LoadObject("pencil")
 # load in all the sensors / observers
 # for s in OD.sensors:
 #     S.Observers[s] = O.LoadObserver(OD.sensors[s])
 # S.Observers["fylingdale300"] = O.LoadObserver(OD.sensors["fylingdale300"])
-S.Observers["fylingdale450"] = O.LoadObserver(OD.sensors["fylingdale450"])
+S.Observers["fylingdale 450"] = O.LoadObserver(OD.sensors["fylingdale450"])
 # S.Observers["fylingdale600"] = O.LoadObserver(OD.sensors["fylingdale600"])
-S.Observers["cape cod"] = O.LoadObserver(OD.sensors["cape cod"])
+S.Observers["cape cod 450"] = O.LoadObserver(OD.sensors["cape cod"])
 # Set the simulation start time and stop times
 datetime.datetime.fromisoformat(OD.simulation["start time"])
 S.StartTime = datetime.datetime.fromisoformat(OD.simulation["start time"])
@@ -101,7 +108,7 @@ plotter.add_mesh(sphere, texture=texture)
 counter = 0
 colors = ["black","orange","grey","blue","yellow"]
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t = H.ConvertResToVecs(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t = H.ConvertResToVecs(S.Observers[s].Results["pencil_1m"])
     if len(x) == 0:
         continue
     points = np.column_stack((x,y,z))
@@ -356,51 +363,87 @@ plotter.show()
 # plt.show()
 
 ## 3d matplot lib plot of trajectory colored by RCS
-fig = plt.figure(figsize=(18, 6))
-ax1 = fig.add_subplot(111,projection='3d')
-labels = []
-ps = []
-for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el, snr= H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
-    if len(x) == 0:
-        continue
-    llh = map.ecef2geodetic(x, y, z)
-    p1 = ax1.scatter(llh[1] % 360, llh[0], llh[2] / 1000, cmap="jet")
-    ps.append(p1)
-    labels.append(s)
-    counter+=1
+# fig = plt.figure(figsize=(18, 6))
+# ax1 = fig.add_subplot(111,projection='3d')
+# labels = []
+# ps = []
+# for s in S.Observers:
+#     x,y,z,vx,vy,vz,t, rcs, az, el, snr= H.ConvertResToVecs2(S.Observers[s].Results["almondhalf"])
+#     if len(x) == 0:
+#         continue
+#     llh = map.ecef2geodetic(x, y, z)
+#     p1 = ax1.scatter(llh[1] % 360, llh[0], llh[2] / 1000, cmap="jet")
+#     ps.append(p1)
+#     labels.append(s)
+#     counter+=1
+#
+# ax1.set_zlabel("Alt (km)")
+# ax1.set_xlabel("Lon (deg)")
+# ax1.set_ylabel("Lat (deg)")
+# ax1.legend(ps,labels)
+# # cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+# # cbar1.set_label("RCS (dBsm)")
+# plt.show()
+#
+# ## 3d matplot lib plot of trajectory colored by RCS
+# fig = plt.figure(figsize=(12, 12))
+# ax1 = fig.add_subplot(111,projection='3d')
+# labels = []
+# ps = []
+# for s in S.Observers:
+#     x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almondhalf"])
+#     if len(x) == 0:
+#         continue
+#     llh = map.ecef2geodetic(x, y, z)
+#     p1 = ax1.scatter(xs=[tm.timestamp() for tm in t], ys=llh[2] / 1000, zs=rcs)
+#     ps.append(p1)
+#     labels.append(s)
+#     counter+=1
+#
+# ax1.set_xlabel("Time")
+# ax1.set_ylabel("Alt (km)")
+# ax1.set_zlabel("RCS (dBsm")
+# ax1.legend(ps,labels)
+# # cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+# # cbar1.set_label("RCS (dBsm)")
+# plt.show()
 
-ax1.set_zlabel("Alt (km)")
-ax1.set_xlabel("Lon (deg)")
-ax1.set_ylabel("Lat (deg)")
-ax1.legend(ps,labels)
-# cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
-# cbar1.set_label("RCS (dBsm)")
-plt.show()
-
-## 3d matplot lib plot of trajectory colored by RCS
-fig = plt.figure(figsize=(12, 12))
-ax1 = fig.add_subplot(111,projection='3d')
-labels = []
-ps = []
-for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
-    if len(x) == 0:
-        continue
-    llh = map.ecef2geodetic(x, y, z)
-    p1 = ax1.scatter(xs=[tm.timestamp() for tm in t], ys=llh[2] / 1000, zs=rcs)
-    ps.append(p1)
-    labels.append(s)
-    counter+=1
-
-ax1.set_xlabel("Time")
-ax1.set_ylabel("Alt (km)")
-ax1.set_zlabel("RCS (dBsm")
-ax1.legend(ps,labels)
-# cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
-# cbar1.set_label("RCS (dBsm)")
-plt.show()
-
+#
+# fig = plt.figure(figsize=(12, 12))
+# ax1 = fig.add_subplot(111)
+# labels = []
+# ps = []
+# shapes = ["+","*"]
+# counter = 0
+# for s in S.Observers:
+#     x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+#     if len(x) == 0:
+#         continue
+#     llh = map.ecef2geodetic(x, y, z)
+#     p1 = ax1.scatter(x=[tm.timestamp() for tm in t], y=rcs, cmap="jet",marker = shapes[counter])
+#     ps.append(p1)
+#     labels.append(s + " pencil")
+#     counter+=1
+#
+# shapes = ["+","*"]
+# counter = 0
+# for s in S.Observers:
+#     x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almondhalf"])
+#     if len(x) == 0:
+#         continue
+#     llh = map.ecef2geodetic(x, y, z)
+#     p1 = ax1.scatter(x=[tm.timestamp() for tm in t], y=rcs, cmap="jet",marker = shapes[counter])
+#     ps.append(p1)
+#     labels.append(s + " almond")
+#     counter+=1
+#
+# ax1.set_xlabel("Time")
+# ax1.set_ylabel("RCS (dBsm")
+# ax1.legend(ps,labels)
+# # cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+# # cbar1.set_label("Altitude (km)")
+# ax1.grid()
+# plt.show()
 
 fig = plt.figure(figsize=(12, 12))
 ax1 = fig.add_subplot(111)
@@ -409,60 +452,24 @@ ps = []
 shapes = ["+","*"]
 counter = 0
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
-    if len(x) == 0:
-        continue
-    llh = map.ecef2geodetic(x, y, z)
-    p1 = ax1.scatter(x=[tm.timestamp() for tm in t], y=rcs, cmap="jet",marker = shapes[counter])
-    ps.append(p1)
-    labels.append(s + " almond")
-    counter+=1
-
-shapes = ["+","*"]
-counter = 0
-for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
-    if len(x) == 0:
-        continue
-    llh = map.ecef2geodetic(x, y, z)
-    p1 = ax1.scatter(x=[tm.timestamp() for tm in t], y=rcs, cmap="jet",marker = shapes[counter])
-    ps.append(p1)
-    labels.append(s + " pencil")
-    counter+=1
-
-ax1.set_xlabel("Time")
-ax1.set_ylabel("RCS (dBsm")
-ax1.legend(ps,labels)
-# cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
-# cbar1.set_label("Altitude (km)")
-ax1.grid()
-plt.show()
-
-fig = plt.figure(figsize=(12, 12))
-ax1 = fig.add_subplot(111)
-labels = []
-ps = []
-shapes = ["+","*"]
-counter = 0
-for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m"])
     if len(x) == 0:
         continue
     aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
     p1 = ax1.scatter(x=aer[2]*0.001, y=rcs,marker = shapes[counter])
     ps.append(p1)
-    labels.append(s + " almond")
+    labels.append(s + " pencil_1m")
     counter+=1
 
 counter = 0
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m_half"])
     if len(x) == 0:
         continue
     aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
     p1 = ax1.scatter(x=aer[2]*0.001, y=rcs,marker = shapes[counter])
     ps.append(p1)
-    labels.append(s+" pencil")
+    labels.append(s+" pencil_1m_half")
     counter+=1
 ax1.set_xlabel("Range (km)")
 ax1.set_ylabel("RCS (dBsm")
@@ -480,6 +487,110 @@ ps = []
 shapes = ["+","*"]
 counter = 0
 for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m_half"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(x=t, y=rcs,marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s + " pencil_1m_half")
+    counter+=1
+
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(x=t, y=rcs,marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s+" pencil_1m_quarter")
+    counter+=1
+ax1.set_xlabel("Time (s)")
+ax1.set_ylabel("RCS (dBsm")
+ax1.legend(ps,labels)
+# cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+# cbar1.set_label("Altitude (km)")
+ax1.grid()
+plt.show()
+
+fig = plt.figure(figsize=(12, 12))
+ax1 = fig.add_subplot(111)
+labels = []
+ps = []
+shapes = ["+","*"]
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m_half"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(x=az, y=rcs,marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s + " pencil_1m_half")
+    counter+=1
+
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(x=az, y=rcs,marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s+" pencil_1m_quarter")
+    counter+=1
+ax1.set_xlabel("Incident Az Angle (deg)")
+ax1.set_ylabel("RCS (dBsm")
+ax1.legend(ps,labels)
+# cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+# cbar1.set_label("Altitude (km)")
+ax1.grid()
+plt.show()
+
+fig = plt.figure(figsize=(12, 12))
+ax1 = fig.add_subplot(111,projection='3d')
+labels = []
+ps = []
+shapes = ["+","*"]
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(xs=az, ys=el,zs=rcs, marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s + " almond")
+    counter+=1
+
+counter = 0
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m"])
+    if len(x) == 0:
+        continue
+    aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1 = ax1.scatter(xs=az, ys=el, zs=rcs, marker = shapes[counter])
+    ps.append(p1)
+    labels.append(s+" pencil_1m_quarter")
+    counter+=1
+ax1.set_xlabel("Incident Az Angle (deg)")
+ax1.set_ylabel("Incident El Angle (deg)")
+ax1.set_zlabel("RCS (dBsm")
+ax1.legend(ps,labels)
+# cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+# cbar1.set_label("Altitude (km)")
+ax1.grid()
+plt.show()
+
+
+fig = plt.figure(figsize=(12, 12))
+ax1 = fig.add_subplot(111)
+labels = []
+ps = []
+shapes = ["+","*"]
+counter = 0
+for s in S.Observers:
     x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
     if len(x) == 0:
         continue
@@ -491,13 +602,13 @@ for s in S.Observers:
 
 counter = 0
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t, rcs, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m"])
     if len(x) == 0:
         continue
     aer = map.ecef2aer(x, y, z, S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
     p1 = ax1.scatter(x=aer[2]*0.001, y=snr,marker = shapes[counter])
     ps.append(p1)
-    labels.append(s+" pencil")
+    labels.append(s+" pencil_1m")
     counter+=1
 ax1.set_xlabel("Range (km)")
 ax1.set_ylabel("SNR")
@@ -517,7 +628,7 @@ counter = 0
 p1label = []
 p1s = []
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t,r, az, el = H.ConvertResToVecs2(S.Observers[s].Results["almond"])
+    x,y,z,vx,vy,vz,t,r, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m"])
     if len(x) == 0:
         continue
     llh = map.ecef2geodetic(x,y,z)
@@ -529,7 +640,7 @@ counter = 0
 p2label = []
 p2s = []
 for s in S.Observers:
-    x,y,z,vx,vy,vz,t,r, az, el = H.ConvertResToVecs2(S.Observers[s].Results["pencil"])
+    x,y,z,vx,vy,vz,t,r, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m_half"])
     if len(x) == 0:
         continue
     llh = map.ecef2geodetic(x,y,z)
@@ -538,28 +649,28 @@ for s in S.Observers:
     p2label.append(s)
     counter+=1
 counter = 0
-p3label = []
-p3s = []
-for s in S.Observers:
-    x,y,z,vx,vy,vz,t,r, az, el = H.ConvertResToVecs2(S.Observers[s].Results["tcone"])
-    if len(x) == 0:
-        continue
-    llh = map.ecef2geodetic(x,y,z)
-    p3=ax3.scatter(llh[1] % 360, llh[0],llh[2]/1000, c = r, cmap = "jet",marker=shapes[counter])
-    p3s.append(p3)
-    p3label.append(s)
-    counter+=1
+# p3label = []
+# p3s = []
+# for s in S.Observers:
+#     x,y,z,vx,vy,vz,t,r, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["tcone"])
+#     if len(x) == 0:
+#         continue
+#     llh = map.ecef2geodetic(x,y,z)
+#     p3=ax3.scatter(llh[1] % 360, llh[0],llh[2]/1000, c = r, cmap = "jet",marker=shapes[counter])
+#     p3s.append(p3)
+#     p3label.append(s)
+#     counter+=1
 
 
 ax1.set_zlabel("Alt (km)")
 ax1.set_xlabel("Lon (deg)")
 ax1.set_ylabel("Lat (deg)")
-ax1.set_title("Almond")
+ax1.set_title("pencil_1m")
 ax1.legend(p1s,p1label)
 ax2.set_zlabel("Alt (km)")
 ax2.set_xlabel("Lon (deg)")
 ax2.set_ylabel("Lat (deg)")
-ax2.set_title("Pencil")
+ax2.set_title("pencil_1m_half")
 ax2.legend(p2s,p2label)
 ax3.set_zlabel("Alt (km)")
 ax3.set_xlabel("Lon (deg)")
@@ -573,4 +684,90 @@ cbar2.set_label("RCS (dBsm)")
 cbar3 = fig.colorbar(p3, ax=ax3, shrink=0.7)
 cbar3.set_label("RCS (dBsm)")
 
+plt.show()
+
+
+fig = plt.figure(figsize=(18, 6))
+ax1 = fig.add_subplot(131,projection='3d')
+ax2 = fig.add_subplot(132, projection='3d')
+ax3 = fig.add_subplot(133, projection='3d')
+shapes = ["+","*","--"]
+counter = 0
+p1label = []
+p1s = []
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t,r, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m"])
+    if len(x) == 0:
+        continue
+    llh = map.ecef2enu(x,y,z,S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p1=ax1.scatter(llh[0]/1000, llh[1]/1000,llh[2]/1000, c = r, cmap = "jet",marker=shapes[counter])
+    p1s.append(p1)
+    p1label.append(s)
+    counter+=1
+counter = 0
+p2label = []
+p2s = []
+for s in S.Observers:
+    x,y,z,vx,vy,vz,t,r, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["pencil_1m_half"])
+    if len(x) == 0:
+        continue
+    llh = map.ecef2enu(x,y,z,S.Observers[s].Location[0],S.Observers[s].Location[1],S.Observers[s].Location[2])
+    p2=ax2.scatter(llh[0]/1000, llh[1]/1000,llh[2]/1000, c = r, cmap = "jet",marker=shapes[counter])
+    p2s.append(p2)
+    p2label.append(s)
+    counter+=1
+counter = 0
+# p3label = []
+# p3s = []
+# for s in S.Observers:
+#     x,y,z,vx,vy,vz,t,r, az, el, snr = H.ConvertResToVecs2(S.Observers[s].Results["tcone"])
+#     if len(x) == 0:
+#         continue
+#     llh = map.ecef2geodetic(x,y,z)
+#     p3=ax3.scatter(llh[1] % 360, llh[0],llh[2]/1000, c = r, cmap = "jet",marker=shapes[counter])
+#     p3s.append(p3)
+#     p3label.append(s)
+#     counter+=1
+
+
+ax1.set_zlabel("Z (km)")
+ax1.set_xlabel("X (km)")
+ax1.set_ylabel("Y (km)")
+ax1.set_title("Pencil 1m")
+ax1.legend(p1s,p1label)
+ax2.set_zlabel("Z (km)")
+ax2.set_xlabel("X (km)")
+ax2.set_ylabel("Y (km)")
+ax2.set_title("pencil_1m_half")
+ax2.legend(p2s,p2label)
+ax3.set_zlabel("Z (km)")
+ax3.set_xlabel("X (km)")
+ax3.set_ylabel("Y (km)")
+ax3.set_title("Truncated Cone")
+ax3.legend(p3s,p3label)
+cbar1 = fig.colorbar(p1, ax=ax1, shrink=0.7)
+cbar1.set_label("RCS (dBsm)")
+cbar2 = fig.colorbar(p2, ax=ax2, shrink=0.7)
+cbar2.set_label("RCS (dBsm)")
+cbar3 = fig.colorbar(p3, ax=ax3, shrink=0.7)
+cbar3.set_label("RCS (dBsm)")
+
+plt.show()
+
+onem = []
+onemhalf = []
+for el in np.linspace(0,85,360):
+    # S.Objects["pencil_1m"].rcs.Value(S.Objects["pencil_1m"].StateInfo(),S.Observers["fylingdale450"].State.Pos,450e6)
+    # S.Objects["pencil_1m_half"].rcs.Value(S.Objects["pencil_1m"].StateInfo(), S.Observers["fylingdale450"].State.Pos, 450e6)
+    onem.append(S.Objects["pencil_1m"].rcs.RCSAzElMaps[1].GetRCS(16,el)[0])
+    onemhalf.append(S.Objects["pencil_1m_half"].rcs.RCSAzElMaps[1].GetRCS(16,el)[0])
+
+fig = plt.figure(figsize=(12, 12))
+ax = fig.add_subplot(111)
+
+ax.plot(np.linspace(0,90,360), onem)
+ax.plot(np.linspace(0,90,360), onemhalf)
+ax.grid()
+ax.set_xlabel("Elevation")
+ax.set_ylabel("RCS")
 plt.show()

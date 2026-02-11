@@ -14,6 +14,53 @@ R_E = 6378137.0              # Earth radius [m]
 OMEGA_E = np.array([0.0, 0.0, 7.2921159e-5])  # Earth rotation [rad/s]
 G0 = 9.80665
 
+
+class Trajectory:
+    def __init__(self, times, xs, ys, zs, q0s, q1s, q2s, q3s):
+        self.times = times
+        self.xs = xs
+        self.ys = ys
+        self.zs = zs
+        self.q0s = q0s
+        self.q1s = q1s
+        self.q2s = q2s
+        self.q3s = q3s
+
+        self.timePoint = times[0]
+
+    def Propagate(self, time):
+        self.timePoint = time.timestamp()
+        return
+
+    def StateInfo(self):
+        st1 = np.array([np.interp(self.timePoint, self.times, self.xs),
+               np.interp(self.timePoint, self.times, self.ys),
+               np.interp(self.timePoint, self.times, self.zs),
+               ])
+
+        qs = np.array([np.interp(self.timePoint, self.times, self.q0s),
+                    np.interp(self.timePoint, self.times, self.q1s),
+                    np.interp(self.timePoint, self.times, self.q2s),
+                    np.interp(self.timePoint, self.times, self.q3s),
+               ])
+        if self.timePoint < self.times[-1] + 0.01:
+            st2 = np.array([np.interp(self.timePoint+0.01, self.times, self.xs),
+                            np.interp(self.timePoint+0.01, self.times, self.ys),
+                            np.interp(self.timePoint+0.01, self.times, self.zs),
+                            ])
+
+            vel = (st2 - st1)*100.0
+        else:
+            st2 = np.array([np.interp(self.timePoint-0.01, self.times, self.xs),
+                            np.interp(self.timePoint-0.01, self.times, self.ys),
+                            np.interp(self.timePoint-0.01, self.times, self.zs),
+                            ])
+            vel = (st1 - st2) * 100.0
+
+
+        return T.StateVector(Pos=T.Vec(st1[0], st1[1], st1[2], datetime.datetime.fromtimestamp(self.timePoint)), Vel=T.Vec(vel[0], vel[1], vel[2], datetime.datetime.fromtimestamp(self.timePoint)),Qs=qs)
+
+
 class BasicPropagator:
     def __init__(self, startState, dt, accelModel):
         self.dt = dt
@@ -135,12 +182,13 @@ class RocketEngine:
 
         return m
 
+
 class RK4Propagator:
     def __init__(self, llhPos, startTime, dt, engine:RocketEngine, cd, A, headings:Headings, drymass):
         p = pymap3d.geodetic2eci(llhPos[0], llhPos[1], llhPos[2], startTime)
         v = np.cross(OMEGA_E, p)
 
-        st = T.StateVector(T.Vec(p[0], p[1],p[2],startTime),T.Vec(v[0],v[1],v[2], startTime))
+        st = T.StateVector(T.Vec(p[0], p[1],p[2],startTime),T.Vec(v[0],v[1],v[2], startTime),[])
         self.InitTime = startTime
 
         self.State = st
@@ -190,9 +238,9 @@ class RK4Propagator:
     # StateInfo should always return ECEF coordinates. NOT ECI!!
     def StateInfo(self):
         stP = map.eci2ecef(self.State.Pos.x,self.State.Pos.y,self.State.Pos.z,self.State.Pos.t)
-        stV1 = map.eci2ecef(self.State.Pos.x + self.State.Vel.x,self.State.Pos.y + self.State.Vel.y,self.State.Pos.z + self.State.Vel.z,self.State.Pos.t)
-        stV = np.array(stV1)-np.array(stP)
-        return T.StateVector(Pos=T.Vec(stP[0], stP[1], stP[2], self.State.Pos.t), Vel=T.Vec(stV[0], stV[1], stV[2], self.State.Pos.t))
+        stV1 = map.eci2ecef(self.State.Pos.x + self.State.Vel.x*0.01,self.State.Pos.y + self.State.Vel.y*0.01,self.State.Pos.z + self.State.Vel.z*0.01,self.State.Pos.t)
+        stV = (np.array(stV1)-np.array(stP))*100
+        return T.StateVector(Pos=T.Vec(stP[0], stP[1], stP[2], self.State.Pos.t), Vel=T.Vec(stV[0], stV[1], stV[2], self.State.Pos.t),Qs=[])
     # =====================
     # Atmosphere (simple exponential)
     # =====================
